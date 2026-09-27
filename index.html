@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>รีไฟแนนซ์ หรือ ขอลดดอกเบี้ย — เครื่องคำนวณความคุ้มค่า</title>
+<meta name="description" content="คำนวณเปรียบเทียบการรีไฟแนนซ์บ้านกับการขอลดดอกเบี้ยธนาคารเดิม (Retention) ทำงานในเครื่องคุณ 100% ไม่เก็บข้อมูล">
+<meta name="theme-color" content="#0E1F2E">
+<!-- การ์ดตัวอย่างตอนแชร์ลง LINE / Facebook — แก้ og:url และ og:image ให้ตรงกับที่โฮสต์จริง -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="เครื่องคำนวณรีไฟแนนซ์บ้าน">
+<meta property="og:title" content="รีไฟแนนซ์ หรือ ขอลดดอกเบี้ยกับธนาคารเดิม? คำนวณดูก่อนตัดสินใจ">
+<meta property="og:description" content="ใส่ตัวเลขจากใบเสนอของธนาคาร แล้วดูว่าทางไหนจ่ายน้อยกว่าจริง รวมค่าจดจำนอง ค่าประเมิน ประกัน และภาษีแล้ว ฟรี ไม่มีโฆษณา ไม่เก็บข้อมูล">
+<meta property="og:image" content="preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<style>
+/* ============ ระบบสี / ตัวอักษร ============ */
+:root{
+  --ink:#0E1F2E; --ink-soft:#2C4759; --ink-mute:#63798A;
+  --paper:#FBFAF7; --surface:#FFFFFF; --line:#E2DFD6; --line-soft:#EFEDE6;
+  --brass:#B4862F; --brass-soft:#F4EAD4;
+  --save:#1C6B4E; --cost:#A23B2C; --keep:#3E6E8E;
+  --radius:10px;
+  --fs-xs:12.5px; --fs-sm:14px; --fs-base:15.5px; --fs-lg:18px;
+  --shadow:0 1px 2px rgba(14,31,46,.05), 0 8px 24px -14px rgba(14,31,46,.22);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'IBM Plex Sans Thai','Noto Sans Thai','Sarabun','Sukhumvit Set','Leelawadee UI',
+              -apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif;
+  font-size:var(--fs-base); line-height:1.6; font-variant-numeric:tabular-nums;
+}
+h1,h2,h3{margin:0; font-weight:600; line-height:1.3; letter-spacing:-.01em}
+button{font-family:inherit; font-size:inherit; cursor:pointer}
+.wrap{max-width:1000px; margin:0 auto; padding:0 18px}
+
+/* ============ หัวเรื่อง ============ */
+.masthead{background:var(--ink); color:#fff; padding:40px 0 34px; position:relative; overflow:hidden}
+.masthead::after{content:''; position:absolute; inset:auto 0 0 0; height:3px;
+  background:linear-gradient(90deg,var(--brass) 0 38%,rgba(180,134,47,.15) 38% 100%)}
+.masthead h1{font-size:clamp(25px,5vw,38px); font-weight:700; max-width:19ch}
+.masthead p{margin:12px 0 0; color:#A9C0D2; max-width:56ch; font-size:var(--fs-sm)}
+.privacy-chip{display:inline-flex; align-items:center; gap:7px; margin-top:18px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(169,192,210,.28);
+  color:#CFE0EC; padding:6px 13px; border-radius:999px; font-size:var(--fs-xs)}
+.privacy-chip b{color:#fff; font-weight:600}
+
+/* ============ ขั้นตอน ============ */
+.steps{display:flex; margin:26px 0 20px; border:1px solid var(--line); border-radius:var(--radius);
+  background:var(--surface); overflow:hidden}
+.step{flex:1; border:0; background:transparent; padding:11px 8px; text-align:center;
+  color:var(--ink-mute); font-size:var(--fs-sm); border-right:1px solid var(--line-soft);
+  transition:background .15s, color .15s; min-width:0}
+.step:last-child{border-right:0}
+.step span{display:block; font-size:var(--fs-xs); opacity:.75}
+.step strong{font-weight:500; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.step[aria-current="true"]{background:var(--ink); color:#fff}
+.step[aria-current="true"] span{color:var(--brass); opacity:1}
+.step.done{color:var(--ink); background:var(--brass-soft)}
+.step:hover:not([aria-current="true"]){background:var(--line-soft)}
+
+/* ============ การ์ด / ฟอร์ม ============ */
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:24px; box-shadow:var(--shadow); margin-bottom:18px}
+.panel > h2{font-size:var(--fs-lg); margin-bottom:4px}
+.panel > .lede{color:var(--ink-mute); font-size:var(--fs-sm); margin:0 0 20px}
+fieldset{border:0; padding:0; margin:0 0 22px}
+legend{font-weight:600; font-size:var(--fs-sm); padding:0 0 9px; width:100%;
+  border-bottom:2px solid var(--brass); margin-bottom:15px; color:var(--ink)}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:14px 16px}
+.f{display:flex; flex-direction:column; gap:5px; min-width:0}
+.f label{font-size:var(--fs-sm); color:var(--ink-soft); font-weight:500}
+.f .hint{font-size:var(--fs-xs); color:var(--ink-mute); line-height:1.45}
+.ctl{display:flex; align-items:stretch}
+input[type=text],select{width:100%; min-width:0; padding:9px 11px; border:1px solid var(--line);
+  border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; font-variant-numeric:tabular-nums}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--brass); outline-offset:1px}
+.suffix{display:flex; align-items:center; padding:0 11px; border:1px solid var(--line); border-left:0;
+  border-radius:0 8px 8px 0; background:var(--line-soft); color:var(--ink-mute);
+  font-size:var(--fs-sm); white-space:nowrap}
+.ctl input{border-radius:8px 0 0 8px}
+.check{display:flex; align-items:flex-start; gap:9px; font-size:var(--fs-sm); color:var(--ink-soft); padding:3px 0}
+.check input{margin-top:4px; accent-color:var(--brass); width:16px; height:16px; flex:0 0 auto}
+.linkbtn{background:none; border:0; color:var(--brass); text-decoration:underline; padding:0;
+  font-size:var(--fs-xs); text-align:left}
+.rows{display:flex; flex-direction:column; gap:9px}
+.row-item{display:grid; grid-template-columns:1fr 130px 112px 34px; gap:8px; align-items:center}
+.row-item .del{border:1px solid var(--line); background:var(--surface); border-radius:8px;
+  color:var(--cost); height:38px; line-height:1}
+.addbtn{align-self:flex-start; margin-top:4px; border:1px dashed var(--line); background:transparent;
+  color:var(--ink-soft); padding:8px 14px; border-radius:8px; font-size:var(--fs-sm)}
+.addbtn:hover{border-color:var(--brass); color:var(--brass)}
+
+.nav{display:flex; justify-content:space-between; gap:12px; margin-top:6px}
+.btn{border:1px solid var(--ink); background:var(--ink); color:#fff; padding:11px 22px;
+  border-radius:8px; font-weight:500}
+.btn:hover{background:var(--ink-soft); border-color:var(--ink-soft)}
+.btn.ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+.btn.ghost:hover{background:var(--line-soft)}
+.btn.gold{background:var(--brass); border-color:var(--brass)}
+.btn.gold:hover{background:#9C7328; border-color:#9C7328}
+
+.alert{background:#F8E7E3; border-left:3px solid var(--cost); color:#7E2C20; padding:11px 14px;
+  border-radius:0 8px 8px 0; font-size:var(--fs-sm); margin-bottom:16px}
+.note{background:var(--line-soft); border-left:3px solid var(--ink-mute); padding:11px 14px;
+  border-radius:0 8px 8px 0; font-size:var(--fs-xs); color:var(--ink-soft); line-height:1.55}
+
+/* ============ ผลลัพธ์ ============ */
+.verdict{background:linear-gradient(135deg, var(--v1,#0E1F2E) 0%, var(--v2,#0A1620) 100%);
+  color:#fff; border-radius:var(--radius); padding:28px 26px;
+  margin-bottom:18px; border-top:5px solid var(--vc,#B4862F)}
+.verdict .vhead{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px}
+.verdict .vcode{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.06em;
+  padding:3px 9px; border-radius:5px; background:rgba(255,255,255,.18); color:#fff}
+.verdict .kicker{color:var(--vt,#E4CB99); font-size:var(--fs-sm); font-weight:500}
+.verdict h2{font-size:clamp(22px,4.4vw,31px); margin:5px 0 14px; font-weight:700}
+.verdict .big{font-size:clamp(30px,7vw,46px); font-weight:700; line-height:1.05; color:#fff}
+.verdict .big small{font-size:.42em; font-weight:500; color:rgba(255,255,255,.72); margin-left:8px}
+.verdict .facts{display:flex; flex-wrap:wrap; gap:10px 30px; margin-top:20px; padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.22)}
+.verdict .facts div{font-size:var(--fs-sm); color:rgba(255,255,255,.72)}
+.verdict .facts b{display:block; color:#fff; font-size:var(--fs-lg); font-weight:600}
+
+.tablewrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line);
+  border-radius:var(--radius); background:var(--surface); margin-bottom:18px}
+table{border-collapse:collapse; width:100%; font-size:var(--fs-sm); min-width:600px}
+caption{text-align:left; padding:16px 18px 6px; font-weight:600; font-size:var(--fs-base)}
+caption small{display:block; font-weight:400; color:var(--ink-mute); font-size:var(--fs-xs); margin-top:3px}
+th,td{padding:9px 14px; text-align:right; border-bottom:1px solid var(--line-soft); white-space:nowrap}
+th:first-child,td:first-child{text-align:left; position:sticky; left:0; background:var(--surface);
+  z-index:1; white-space:normal; min-width:190px}
+thead th{background:var(--ink); color:#fff; font-weight:600; border-bottom:0}
+thead th:first-child{background:var(--ink)}
+tbody tr:hover td,tbody tr:hover td:first-child{background:#FAF9F5}
+td.win{background:var(--brass-soft) !important; font-weight:600}
+th.win:not(.bk){background:var(--brass) !important; color:#fff !important}
+tr.total td{border-top:2px solid var(--ink); border-bottom:2px solid var(--ink);
+  font-weight:700; font-size:var(--fs-base)}
+tr.sub td{color:var(--ink-mute); font-size:var(--fs-xs)}
+.neg{color:var(--cost); font-weight:600}
+
+details{border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); margin-bottom:18px}
+summary{padding:15px 18px; cursor:pointer; font-weight:600; list-style:none;
+  display:flex; justify-content:space-between; align-items:center; gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'＋'; color:var(--brass); font-weight:400; font-size:19px}
+details[open] summary::after{content:'−'}
+details[open] summary{border-bottom:1px solid var(--line)}
+details .tablewrap{border:0; border-radius:0; margin-bottom:0}
+
+.chartbox{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px 18px; margin-bottom:18px}
+.chartbox h3{font-size:var(--fs-base); margin-bottom:3px}
+.chartbox .lede{font-size:var(--fs-xs); color:var(--ink-mute); margin:0 0 14px}
+.legend{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:12px; font-size:var(--fs-xs); color:var(--ink-soft)}
+.legend i{display:inline-block; width:16px; height:3px; border-radius:2px; margin-right:7px; vertical-align:middle}
+svg.chart{width:100%; height:auto; display:block}
+.exportbar{display:flex; flex-wrap:wrap; gap:10px; margin:22px 0}
+
+/* ── หัวคอลัมน์แยกสีตามธนาคาร ── */
+thead th.bk{background:var(--bk); color:var(--bf); border-bottom:0; vertical-align:bottom}
+thead th.bk.outline{background:var(--surface); color:var(--bk);
+  box-shadow:inset 0 4px 0 var(--bk), inset 0 -1px 0 var(--line)}
+thead th.bk .bcode{display:inline-block; font-size:10px; letter-spacing:.06em; font-weight:700;
+  padding:2px 6px; border-radius:4px; margin-right:7px; vertical-align:2px;
+  background:rgba(255,255,255,.22); color:var(--bf)}
+thead th.bk.outline .bcode{background:var(--bk); color:#fff}
+thead th.bk .bname{font-weight:600}
+thead th.bk .crown{display:inline-block; background:#F6D98A; color:#3A2B00; font-size:10px;
+  font-weight:700; letter-spacing:.04em; padding:2px 8px; border-radius:99px; margin-bottom:6px}
+thead th.bk.win{box-shadow:inset 0 -5px 0 var(--brass)}
+thead th.bk.outline.win{box-shadow:inset 0 4px 0 var(--bk), inset 0 -5px 0 var(--brass)}
+thead th.bsub{background:var(--tint); color:var(--ink); font-weight:600;
+  box-shadow:inset 0 -3px 0 var(--bk); font-size:var(--fs-xs)}
+td.bk{box-shadow:inset 3px 0 0 var(--edge)}
+.bankchip{display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs);
+  padding:3px 9px; border-radius:99px; background:var(--bk); color:var(--bf); font-weight:600}
+.bankchip.outline{background:transparent; color:var(--bk); box-shadow:inset 0 0 0 1.5px var(--bk)}
+
+/* ── ตารางผ่อน ── */
+#tbl-amort{min-width:820px}
+#tbl-amort td,#tbl-amort th{padding:7px 12px; font-size:var(--fs-xs)}
+#tbl-amort th.c-m,#tbl-amort td.c-m{min-width:62px; text-align:right}
+#tbl-amort th.c-y,#tbl-amort td.c-y{position:sticky; left:62px; z-index:1; text-align:right;
+  background:var(--surface); min-width:48px; box-shadow:inset -1px 0 0 var(--line)}
+#tbl-amort thead th.c-m,#tbl-amort thead th.c-y{background:var(--ink); color:#fff}
+#tbl-amort tfoot td.c-m{background:#FAF9F5; text-align:left}
+#tbl-amort tbody tr.ystart td{border-top:1px solid var(--line)}
+#tbl-amort td.dim{color:#C2BDB1}
+#tbl-amort tr.payoff td{background:#F3F7F4; font-weight:600}
+#tbl-amort tr.payoff td:first-child{background:#F3F7F4}
+.tag{display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px;
+  background:var(--save); color:#fff; margin-left:6px}
+tfoot td,tfoot th{border-top:2px solid var(--ink); font-weight:700; background:#FAF9F5}
+.amortbar{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; padding:14px 18px 4px}
+.amortbar .f{margin:0; min-width:220px; flex:1}
+.amortnote{padding:2px 18px 12px; font-size:var(--fs-xs); color:var(--ink-mute); line-height:1.6}
+.amortnote b{color:var(--ink)}
+
+/* ── กล่องเลี้ยงกาแฟก่อนดาวน์โหลด ── */
+.modal{position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+  padding:18px; background:rgba(14,31,46,.55); backdrop-filter:blur(2px)}
+.modal[hidden]{display:none}
+.modal-card{background:var(--surface); border-radius:var(--radius); max-width:430px; width:100%;
+  max-height:92vh; overflow:auto; box-shadow:0 24px 60px rgba(14,31,46,.3); position:relative;
+  border-top:5px solid var(--brass)}
+.modal-card .x{position:absolute; top:10px; right:12px; border:0; background:transparent; cursor:pointer;
+  font-size:24px; line-height:1; color:var(--ink-mute); padding:4px 8px; border-radius:8px}
+.modal-card .x:hover{background:var(--line-soft); color:var(--ink)}
+.modal-body{padding:26px 24px 20px; text-align:center}
+.modal-body h3{font-size:var(--fs-lg); margin-bottom:8px}
+.modal-body p{font-size:var(--fs-sm); color:var(--ink-soft); line-height:1.65; margin-bottom:16px}
+.modal-qr{width:190px; margin:0 auto 12px; background:#fff; padding:10px;
+  border:1px solid var(--line); border-radius:12px}
+.modal-qr svg,.modal-qr img{width:100%; height:auto; display:block}
+.modal-hint{font-size:var(--fs-xs); color:var(--ink-mute); line-height:1.6; margin:0 0 16px;
+  background:#FAF7EF; border:1px solid var(--line); border-radius:9px; padding:9px 11px; text-align:left}
+.modal-foot{display:flex; flex-direction:column; gap:9px}
+.modal-foot .skip{font-size:var(--fs-xs); color:var(--ink-mute); background:none; border:0;
+  cursor:pointer; text-decoration:underline; padding:4px}
+
+/* ── ช่องที่ยังกรอกไม่ครบ ── */
+.f.invalid input,.f.invalid select{border-color:var(--cost); background:#FEF8F6}
+.f .err{color:var(--cost); font-size:var(--fs-xs); font-weight:500}
+.toast{position:fixed; left:50%; bottom:20px; transform:translate(-50%,0); z-index:95;
+  background:var(--ink); color:#fff; padding:11px 20px; border-radius:99px; max-width:92vw;
+  font-size:var(--fs-sm); box-shadow:0 10px 30px rgba(14,31,46,.3); text-align:center}
+.toast[hidden]{display:none}
+
+/* ── ฟีดแบ็ก ── */
+.feedback{background:var(--surface); border:1px solid var(--line); border-top:4px solid var(--keep);
+  border-radius:var(--radius); padding:26px; margin:30px 0}
+.feedback h2{font-size:var(--fs-lg)}
+.feedback > p{color:var(--ink-mute); font-size:var(--fs-sm); margin:8px 0 0; max-width:58ch}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 14px}
+.chip{border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
+  padding:7px 14px; border-radius:99px; font-size:var(--fs-xs)}
+.chip[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.feedback textarea{width:100%; min-height:96px; padding:11px; border:1px solid var(--line);
+  border-radius:8px; font:inherit; font-size:var(--fs-sm); resize:vertical; background:var(--surface);
+  color:var(--ink)}
+.feedback textarea:focus{outline:2px solid var(--brass); outline-offset:1px}
+.fb-foot{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px}
+.fb-foot .hint{font-size:var(--fs-xs); color:var(--ink-mute)}
+
+/* ── ชวนแชร์ ── */
+.share-icons{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:4px 0 18px}
+.share-icons button{border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
+  padding:9px 16px; border-radius:99px; font-size:var(--fs-sm)}
+.share-icons button:hover{border-color:var(--brass); color:var(--brass)}
+
+/* ============ สนับสนุน ============ */
+.support{background:var(--surface); border:1px solid var(--line); border-top:4px solid var(--brass);
+  border-radius:var(--radius); padding:26px; margin:30px 0 40px}
+.support h2{font-size:var(--fs-lg)}
+.support p{color:var(--ink-mute); font-size:var(--fs-sm); margin:8px 0 0; max-width:52ch}
+.support-body{display:flex; gap:26px; flex-wrap:wrap; align-items:flex-start; margin-top:20px}
+.qr-frame{background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; text-align:center; flex:0 0 auto; margin:0}
+.qr-frame svg,.qr-frame img{width:190px; height:190px; display:block}
+.support-side{flex:1; min-width:245px}
+footer.site{border-top:1px solid var(--line); padding:22px 0 46px; color:var(--ink-mute);
+  font-size:var(--fs-xs); line-height:1.7}
+
+@media (max-width:640px){
+  .wrap{padding:0 14px}
+  .panel{padding:18px 15px}
+  .verdict{padding:22px 18px}
+  .step strong{font-size:var(--fs-xs)}
+  .step span{display:none}
+  .row-item{grid-template-columns:1fr 102px 34px; grid-template-areas:'n n n' 'a t d'}
+  .row-item > :nth-child(1){grid-area:n}
+  .row-item > :nth-child(2){grid-area:a}
+  .row-item > :nth-child(3){grid-area:t}
+  .row-item > :nth-child(4){grid-area:d}
+  .qr-frame{margin:0 auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important; animation:none !important}}
+
+/* ============ โหมดพิมพ์ / บันทึกเป็น PDF ============ */
+@media print{
+  @page{size:A4 portrait; margin:13mm 12mm}
+  html,body{background:#fff !important; color:#000; font-size:10.5pt}
+  .masthead,.steps,.nav,.exportbar,.no-print,.support,footer.site,.addbtn,.modal,.amortbar{display:none !important}
+  thead th.bk{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  thead th.bsub{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .wrap{max-width:none; padding:0}
+  .panel,.chartbox,details,.tablewrap{box-shadow:none; break-inside:avoid; page-break-inside:avoid;
+    margin-bottom:9px; border:1px solid #BBB}
+  .verdict{background:#fff !important; color:#000 !important; border:2px solid #000;
+    border-top:5px solid var(--vc,#B4862F) !important; padding:15px;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .verdict h2,.verdict .big{color:#000 !important}
+  .verdict .kicker{color:var(--v1,#8A6620) !important}
+  .verdict .vcode{background:var(--v1,#333) !important; color:#fff !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .verdict .facts div{color:#444 !important}
+  .verdict .facts b{color:#000 !important}
+  .verdict .big small{color:#555 !important}
+  thead th:not(.bk):not(.bsub){background:#0E1F2E !important; color:#fff !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  thead th.bk{background:var(--bk) !important; color:var(--bf) !important}
+  thead th.bk.outline{background:#fff !important; color:var(--bk) !important;
+    box-shadow:inset 0 4px 0 var(--bk)}
+  thead th.bsub{background:var(--tint) !important; color:#000 !important;
+    box-shadow:inset 0 -3px 0 var(--bk)}
+  #tbl-amort .c-y{position:static !important}
+  th.win:not(.bk){background:#B4862F !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  td.win{background:#F4EAD4 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .tablewrap{overflow:visible}
+  table{min-width:0; width:100%; font-size:9pt}
+  th,td{padding:4px 7px; white-space:normal}
+  th:first-child,td:first-child{position:static}
+  details{border:0}
+  details summary{border-bottom:1px solid #BBB; padding:8px 0}
+  details summary::after{display:none}
+  #print-head{display:block !important}
+}
+#print-head{display:none; border-bottom:2px solid var(--ink); padding-bottom:8px; margin-bottom:12px}
+#print-head h1{font-size:15pt}
+#print-head p{margin:4px 0 0; font-size:9pt; color:#555}
+#print-credit{font-weight:600; color:#0E1F2E !important}
+#print-foot{display:none}
+@media print{ #print-foot{display:block; margin-top:14px; padding-top:8px;
+  border-top:1px solid #BBB; font-size:8.5pt; color:#555; text-align:center} }
+</style>
+</head>
+<body>
+
+<header class="masthead no-print">
+  <div class="wrap">
+    <h1>รีไฟแนนซ์ หรือ ขอลดดอกเบี้ยกับธนาคารเดิม?</h1>
+    <p>ใส่ตัวเลขจากใบเสนอที่คุณได้รับ แล้วดูว่าทางไหนจ่ายน้อยกว่าจริง เมื่อรวมค่าจดจำนอง ค่าประเมิน ประกันอัคคีภัย และ MRTA เข้าไปด้วยแล้ว</p>
+    <div class="privacy-chip"><b>คำนวณในเครื่องคุณ</b> ไม่มีการส่งหรือเก็บข้อมูลที่ใดทั้งสิ้น</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <nav class="steps no-print" aria-label="ขั้นตอนการกรอกข้อมูล">
+    <button class="step" data-go="1" aria-current="true"><span>ขั้นที่ 1</span><strong>หนี้เดิม</strong></button>
+    <button class="step" data-go="2"><span>ขั้นที่ 2</span><strong>รีไฟแนนซ์</strong></button>
+    <button class="step" data-go="3"><span>ขั้นที่ 3</span><strong>ลดดอกเบี้ย</strong></button>
+    <button class="step" data-go="4"><span>ขั้นที่ 4</span><strong>สรุปผล</strong></button>
+  </nav>
+
+  <div id="print-head">
+    <h1>รายงานเปรียบเทียบ: รีไฟแนนซ์ vs ขอลดดอกเบี้ยกับธนาคารเดิม</h1>
+    <p id="print-meta"></p>
+    <p id="print-credit"></p>
+  </div>
+
+  <!-- ==================== ขั้นที่ 1 ==================== -->
+  <section class="panel" id="p1">
+    <h2>สินเชื่อที่คุณผ่อนอยู่ตอนนี้</h2>
+    <p class="lede">ดูตัวเลขได้จากใบแจ้งยอดล่าสุด หรือแอปของธนาคาร</p>
+
+    <fieldset>
+      <legend>ยอดหนี้และค่างวด</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="cur_bank">ธนาคารที่ผ่อนอยู่ตอนนี้</label>
+          <select id="cur_bank"></select>
+          <input type="text" id="cur_bank_other" placeholder="พิมพ์ชื่อธนาคาร" maxlength="30" hidden style="margin-top:8px">
+          <span class="hint">ใช้กำหนดสีหัวตารางของธนาคารเดิมทั้งในผลลัพธ์และไฟล์ที่ดาวน์โหลด</span>
+        </div>
+        <div class="f">
+          <label for="principal">ยอดหนี้คงเหลือ</label>
+          <div class="ctl"><input type="text" id="principal" inputmode="decimal" placeholder="เช่น 2,000,000"><span class="suffix">บาท</span></div>
+          <span class="hint">เงินต้นคงค้าง ณ วันนี้</span>
+        </div>
+        <div class="f">
+          <label for="installment">ค่างวดที่ผ่อนอยู่ต่อเดือน</label>
+          <div class="ctl"><input type="text" id="installment" inputmode="decimal" placeholder="เช่น 15,000"><span class="suffix">บาท</span></div>
+          <span class="hint">ใช้เป็นค่าตั้งต้นของทุกทางเลือก</span>
+        </div>
+        <div class="f">
+          <label for="baseRate">ดอกเบี้ยที่เสียอยู่ตอนนี้</label>
+          <div class="ctl"><input type="text" id="baseRate" inputmode="decimal" value="6.50"><span class="suffix">% ต่อปี</span></div>
+          <span class="hint">ดูจากใบแจ้งยอดล่าสุด</span>
+        </div>
+        <div class="f">
+          <label for="baseUntil">อัตรานี้ใช้ถึงปีที่</label>
+          <select id="baseUntil">
+            <option value="3">ใช้อัตรานี้ตลอด ไม่มีโปรฯ เหลือแล้ว</option>
+            <option value="1">หมดโปรฯ สิ้นปีที่ 1 นับจากวันนี้</option>
+            <option value="2">หมดโปรฯ สิ้นปีที่ 2 นับจากวันนี้</option>
+          </select>
+          <span class="hint">ถ้ายังอยู่ในโปรโมชันดอกเบี้ยต่ำ เลือกปีที่โปรฯ จะหมด</span>
+        </div>
+        <div class="f">
+          <label for="baseAfter">ดอกเบี้ยหลังหมดโปรฯ (ปีที่ 4 เป็นต้นไป)</label>
+          <div class="ctl"><input type="text" id="baseAfter" inputmode="decimal" value="6.50"><span class="suffix">% ต่อปี</span></div>
+          <span class="hint">อัตราลอยตัวตามสัญญาเดิม เช่น MRR − 0.50% ถ้าไม่รู้ให้ใส่เท่ากับอัตราปัจจุบัน</span>
+        </div>
+        <div class="f">
+          <label for="extra">โปะเพิ่มต่อเดือน</label>
+          <div class="ctl"><input type="text" id="extra" inputmode="decimal" value="0"><span class="suffix">บาท</span></div>
+          <span class="hint">ใส่เท่ากันทุกทางเลือกเพื่อเทียบอย่างยุติธรรม</span>
+        </div>
+        <div class="f">
+          <label for="horizon">ช่วงเวลาที่ใช้เปรียบเทียบ</label>
+          <div class="ctl"><input type="text" id="horizon" inputmode="numeric" value="3"><span class="suffix">ปี</span></div>
+          <span class="hint">แนะนำ 3 ปี เท่าอายุโปรโมชัน แล้วค่อยรีไฟแนนซ์รอบใหม่</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ค่าใช้จ่ายที่ยังต้องจ่ายถ้าอยู่ที่เดิมเฉย ๆ</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="b_fire">ค่าประกันอัคคีภัย</label>
+          <div class="ctl"><input type="text" id="b_fire" inputmode="decimal" value="1,500"><span class="suffix">บาท/ปี</span></div>
+          <span class="hint">ถ้าจ่ายเป็นก้อน 3 ปี ให้หาร 3 ก่อนกรอก</span>
+        </div>
+        <div class="f">
+          <label for="b_mrta">ค่าประกันวงเงินกู้ MRTA</label>
+          <div class="ctl"><input type="text" id="b_mrta" inputmode="decimal" value="0"><span class="suffix">บาท</span></div>
+          <span class="hint">ปกติจ่ายไปแล้วตอนกู้ครั้งแรก จึงใส่ 0</span>
+        </div>
+        <div class="f">
+          <label for="b_mrta_mode">วิธีจ่าย MRTA</label>
+          <select id="b_mrta_mode"><option value="upfront">จ่ายก้อนเดียวตอนเริ่ม</option><option value="yearly">จ่ายรายปี</option></select>
+        </div>
+      </div>
+      <div class="f" style="margin-top:16px">
+        <label>ค่าใช้จ่ายอื่น ๆ</label>
+        <div class="rows" id="b_other"></div>
+        <button type="button" class="addbtn" data-add="b_other">+ เพิ่มรายการ</button>
+      </div>
+    </fieldset>
+
+    <div class="nav"><span></span><button class="btn" data-go="2">ถัดไป: ข้อเสนอรีไฟแนนซ์</button></div>
+  </section>
+
+  <!-- ==================== ขั้นที่ 2 ==================== -->
+  <section class="panel" id="p2" hidden>
+    <h2>ข้อเสนอรีไฟแนนซ์จากธนาคารใหม่</h2>
+    <p class="lede">กรอกตามใบเสนออัตราดอกเบี้ยที่ธนาคารใหม่ให้มา</p>
+
+    <fieldset>
+      <legend>วงเงินและดอกเบี้ย</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="r_bank">ธนาคารที่จะรีไฟแนนซ์ไป</label>
+          <select id="r_bank"></select>
+          <input type="text" id="r_bank_other" placeholder="พิมพ์ชื่อธนาคาร" maxlength="30" hidden style="margin-top:8px">
+        </div>
+        <div class="f">
+          <label for="r_loan">วงเงินกู้ใหม่</label>
+          <div class="ctl"><input type="text" id="r_loan" inputmode="decimal" placeholder="เว้นว่าง = เท่ายอดหนี้คงเหลือ"><span class="suffix">บาท</span></div>
+          <button type="button" class="linkbtn" id="r_loan_same">ใช้เท่ายอดหนี้คงเหลือ</button>
+        </div>
+        <div class="f">
+          <label for="r_inst">ค่างวดต่อเดือน</label>
+          <div class="ctl"><input type="text" id="r_inst" inputmode="decimal" placeholder="เว้นว่าง = ค่างวดเดิม"><span class="suffix">บาท</span></div>
+          <button type="button" class="linkbtn" id="r_inst_same">ใช้ค่างวดเดิม</button>
+        </div>
+        <div class="f">
+          <label for="r_r1">ดอกเบี้ยปีที่ 1</label>
+          <div class="ctl"><input type="text" id="r_r1" inputmode="decimal" value="2.55"><span class="suffix">%</span></div>
+        </div>
+        <div class="f">
+          <label for="r_r2">ดอกเบี้ยปีที่ 2</label>
+          <div class="ctl"><input type="text" id="r_r2" inputmode="decimal" value="2.55"><span class="suffix">%</span></div>
+        </div>
+        <div class="f">
+          <label for="r_r3">ดอกเบี้ยปีที่ 3</label>
+          <div class="ctl"><input type="text" id="r_r3" inputmode="decimal" value="2.55"><span class="suffix">%</span></div>
+        </div>
+        <div class="f">
+          <label for="r_rf">ดอกเบี้ยปีที่ 4 เป็นต้นไป</label>
+          <div class="ctl"><input type="text" id="r_rf" inputmode="decimal" value="6.30"><span class="suffix">%</span></div>
+          <span class="hint">อัตราลอยตัวตามสัญญา เช่น MRR − 0.75%</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ค่าใช้จ่ายในการย้ายธนาคาร</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="r_mortgage">ค่าจดจำนอง</label>
+          <div class="ctl"><input type="text" id="r_mortgage" inputmode="decimal" value="20,900"><span class="suffix">บาท</span></div>
+          <span class="hint">ปกติ 1% ของวงเงิน สูงสุด 200,000 บาท</span>
+          <label class="check"><input type="checkbox" id="r_gov"> ใช้มาตรการรัฐ ลดเหลือ 0.01%</label>
+          <label class="check"><input type="checkbox" id="r_mortgage_bank"> ธนาคารออกค่าจดจำนองให้</label>
+        </div>
+        <div class="f">
+          <label for="r_stamp">อากรแสตมป์สัญญากู้ (ภาษีกรมสรรพากร)</label>
+          <div class="ctl"><input type="text" id="r_stamp" inputmode="decimal" value="1,045"><span class="suffix">บาท</span></div>
+          <span class="hint">0.05% ของวงเงิน สูงสุด 10,000 บาท</span>
+          <label class="check"><input type="checkbox" id="r_stamp_bank"> ธนาคารออกให้</label>
+        </div>
+        <div class="f">
+          <label for="r_appraise">ค่าประเมินราคาหลักประกัน</label>
+          <div class="ctl"><input type="text" id="r_appraise" inputmode="decimal" value="3,000"><span class="suffix">บาท</span></div>
+          <label class="check"><input type="checkbox" id="r_appraise_vat" checked> ราคานี้ยังไม่รวม VAT</label>
+        </div>
+        <div class="f">
+          <label for="r_fee">ค่าธรรมเนียมธนาคาร / ค่าดำเนินการ</label>
+          <div class="ctl"><input type="text" id="r_fee" inputmode="decimal" value="0"><span class="suffix">บาท</span></div>
+          <label class="check"><input type="checkbox" id="r_fee_vat"> ราคานี้ยังไม่รวม VAT</label>
+        </div>
+        <div class="f">
+          <label for="r_vat">อัตราภาษีมูลค่าเพิ่ม (VAT)</label>
+          <div class="ctl"><input type="text" id="r_vat" inputmode="decimal" value="7.00"><span class="suffix">%</span></div>
+          <span class="hint">บวกให้เฉพาะรายการที่ติ๊กว่ายังไม่รวม VAT ไว้ ถ้าใบเสนอราคาของธนาคารรวมภาษีมาแล้วให้ติ๊กออก ส่วนค่าจดจำนองและอากรแสตมป์เป็นค่าธรรมเนียมและภาษีของภาครัฐ ไม่มี VAT ซ้อน</span>
+        </div>
+        <div class="f">
+          <label for="r_penalty">ค่าปรับไถ่ถอนก่อนกำหนด</label>
+          <div class="ctl"><input type="text" id="r_penalty" inputmode="decimal" value="0"><span class="suffix">บาท</span></div>
+          <span class="hint">ถ้ายังผ่อนไม่ครบ 3 ปี มักโดน 3% ของยอดหนี้</span>
+          <button type="button" class="linkbtn" id="r_penalty_3">คิด 3% ของยอดหนี้คงเหลือ</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ค่าประกันของสัญญาใหม่</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="r_fire">ค่าประกันอัคคีภัย</label>
+          <div class="ctl"><input type="text" id="r_fire" inputmode="decimal" value="0"><span class="suffix">บาท/ปี</span></div>
+          <span class="hint">บางธนาคารให้ฟรีตลอดสัญญา ใส่ 0</span>
+        </div>
+        <div class="f">
+          <label for="r_mrta">ค่าประกันวงเงินกู้ MRTA</label>
+          <div class="ctl"><input type="text" id="r_mrta" inputmode="decimal" value="0"><span class="suffix">บาท</span></div>
+          <span class="hint">มักผูกกับเงื่อนไขดอกเบี้ยพิเศษ</span>
+        </div>
+        <div class="f">
+          <label for="r_mrta_mode">วิธีจ่าย MRTA</label>
+          <select id="r_mrta_mode"><option value="upfront">จ่ายก้อนเดียวตอนเริ่ม</option><option value="yearly">จ่ายรายปี</option></select>
+          <label class="check"><input type="checkbox" id="r_mrta_fin"> รวมเบี้ย MRTA เข้าไปในวงเงินกู้</label>
+          <span class="hint">ถ้าติ๊ก เบี้ยจะถูกบวกเข้าเงินต้นและเสียดอกเบี้ยตามไปด้วย</span>
+        </div>
+      </div>
+      <div class="f" style="margin-top:16px">
+        <label>ค่าใช้จ่ายอื่น ๆ</label>
+        <div class="rows" id="r_other"></div>
+        <button type="button" class="addbtn" data-add="r_other">+ เพิ่มรายการ</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ค่าใช้จ่ายวันโอนกรรมสิทธิ์ (ถ้ามี)</legend>
+      <label class="check"><input type="checkbox" id="x_on"> วันเดียวกันนี้มีการขายหรือโอนกรรมสิทธิ์ด้วย เช่น รับโอนส่วนของผู้ถือกรรมสิทธิ์รวม หรือซื้อต่อจากเจ้าของเดิม</label>
+      <p class="hint" style="margin:8px 0 0">ถ้าเป็นการย้ายธนาคารอย่างเดียว ไม่มีการเปลี่ยนชื่อผู้ถือกรรมสิทธิ์ ไม่ต้องติ๊กช่องนี้ เพราะจะไม่มีค่าธรรมเนียมโอนและภาษีหัก ณ ที่จ่าย ตัวเลขที่กรอกในนี้เอาไปใช้กับทางเลือกขอลดดอกเบี้ยได้ด้วย โดยไปติ๊กเปิดในขั้นที่ 3</p>
+
+      <div id="x_box" hidden style="margin-top:18px">
+        <div class="grid">
+          <div class="f">
+            <label for="x_appraisal">ราคาประเมินของกรมที่ดิน (ทั้งแปลง)</label>
+            <div class="ctl"><input type="text" id="x_appraisal" inputmode="decimal" placeholder="เช่น 2,500,000"><span class="suffix">บาท</span></div>
+          </div>
+          <div class="f">
+            <label for="x_share">สัดส่วนกรรมสิทธิ์ที่โอน</label>
+            <div class="ctl"><input type="text" id="x_share" inputmode="decimal" value="100"><span class="suffix">%</span></div>
+            <span class="hint">โอนทั้งแปลงใส่ 100 ถ้าโอนเฉพาะบางส่วน ใส่สัดส่วนนั้น เช่น 50</span>
+          </div>
+          <div class="f">
+            <label for="x_price">ราคาซื้อขายที่แจ้งในสัญญา</label>
+            <div class="ctl"><input type="text" id="x_price" inputmode="decimal" placeholder="เช่น 1,250,000"><span class="suffix">บาท</span></div>
+            <span class="hint">ถ้าต่ำกว่าราคาประเมิน อากรและภาษีธุรกิจเฉพาะจะคิดจากราคาประเมินแทน</span>
+          </div>
+          <div class="f">
+            <label for="x_years">จำนวนปีที่ผู้ขายถือครอง</label>
+            <div class="ctl"><input type="text" id="x_years" inputmode="decimal" value="6"><span class="suffix">ปี</span></div>
+            <span class="hint">นับตามปี พ.ศ. ที่ระบุในโฉนด เศษของปีนับเป็น 1 ปี</span>
+          </div>
+          <div class="f">
+            <label for="x_misc">ค่าเบ็ดเตล็ด (คำขอ พยาน ไถ่ถอน)</label>
+            <div class="ctl"><input type="text" id="x_misc" inputmode="decimal" value="200"><span class="suffix">บาท</span></div>
+          </div>
+          <div class="f">
+            <label for="x_fee_pct">ค่าธรรมเนียมโอนส่วนที่เราออก</label>
+            <div class="ctl"><input type="text" id="x_fee_pct" inputmode="decimal" value="50"><span class="suffix">%</span></div>
+            <span class="hint">ตามธรรมเนียมมักแบ่งกันคนละครึ่งกับผู้ขาย</span>
+          </div>
+          <div class="f">
+            <label for="x_tax_pct">ภาษีฝั่งผู้ขายส่วนที่เรารับภาระ</label>
+            <div class="ctl"><input type="text" id="x_tax_pct" inputmode="decimal" value="100"><span class="suffix">%</span></div>
+            <span class="hint">ภาษีหัก ณ ที่จ่าย อากรแสตมป์ และภาษีธุรกิจเฉพาะ ตามกฎหมายเป็นภาระของผู้ขาย แต่ตกลงกันได้ ใส่ 0 ถ้าผู้ขายจ่ายเองทั้งหมด</span>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="x_reg"> ผู้ขายมีชื่อในทะเบียนบ้านของทรัพย์นี้มาแล้วเกิน 1 ปี</label>
+        <label class="check"><input type="checkbox" id="x_gov"> ใช้มาตรการรัฐ ค่าธรรมเนียมโอนเหลือ 0.01%</label>
+        <label class="check"><input type="checkbox" id="x_fee_bank"> ธนาคารออกค่าธรรมเนียมโอนให้</label>
+        <div class="note" id="x_out" style="margin-top:14px"></div>
+      </div>
+    </fieldset>
+
+    <div class="nav"><button class="btn ghost" data-go="1">ย้อนกลับ</button><button class="btn" data-go="3">ถัดไป: ขอลดดอกเบี้ย</button></div>
+  </section>
+
+  <!-- ==================== ขั้นที่ 3 ==================== -->
+  <section class="panel" id="p3" hidden>
+    <h2>ข้อเสนอลดดอกเบี้ยจากธนาคารเดิม</h2>
+    <p class="lede">Retention คือการขอให้ธนาคารเดิมลดดอกเบี้ยให้โดยไม่ต้องย้ายธนาคาร ไม่มีค่าจดจำนองและค่าประเมิน มีเพียงค่าธรรมเนียมดำเนินการ</p>
+    <p style="margin:-6px 0 18px"><span class="bankchip" id="ret-bankchip">ธนาคารเดิม</span></p>
+
+    <fieldset>
+      <legend>อัตราดอกเบี้ยที่ธนาคารเดิมเสนอ</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="t_inst">ค่างวดต่อเดือน</label>
+          <div class="ctl"><input type="text" id="t_inst" inputmode="decimal" placeholder="เว้นว่าง = ค่างวดเดิม"><span class="suffix">บาท</span></div>
+          <button type="button" class="linkbtn" id="t_inst_same">ใช้ค่างวดเดิม</button>
+        </div>
+        <div class="f">
+          <label for="t_r1">ดอกเบี้ยปีที่ 1</label>
+          <div class="ctl"><input type="text" id="t_r1" inputmode="decimal" value="2.95"><span class="suffix">%</span></div>
+        </div>
+        <div class="f">
+          <label for="t_r2">ดอกเบี้ยปีที่ 2</label>
+          <div class="ctl"><input type="text" id="t_r2" inputmode="decimal" value="2.95"><span class="suffix">%</span></div>
+        </div>
+        <div class="f">
+          <label for="t_r3">ดอกเบี้ยปีที่ 3</label>
+          <div class="ctl"><input type="text" id="t_r3" inputmode="decimal" value="2.95"><span class="suffix">%</span></div>
+        </div>
+        <div class="f">
+          <label for="t_rf">ดอกเบี้ยปีที่ 4 เป็นต้นไป</label>
+          <div class="ctl"><input type="text" id="t_rf" inputmode="decimal" value="6.50"><span class="suffix">%</span></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ค่าใช้จ่าย</legend>
+      <div class="grid">
+        <div class="f">
+          <label for="t_fee">ค่าธรรมเนียมขอลดดอกเบี้ย</label>
+          <div class="ctl"><input type="text" id="t_fee" inputmode="decimal" value="4,000"><span class="suffix">บาท</span></div>
+          <span class="hint">แล้วแต่ธนาคาร มักเป็นค่าคงที่ 2,000–10,000 บาท หรือคิดเป็น % ของยอดหนี้</span>
+          <button type="button" class="linkbtn" id="t_fee_1">คิด 1% ของยอดหนี้คงเหลือ</button>
+          <label class="check"><input type="checkbox" id="t_fee_vat"> ราคานี้ยังไม่รวม VAT</label>
+        </div>
+        <div class="f">
+          <label for="t_vat">อัตราภาษีมูลค่าเพิ่ม (VAT)</label>
+          <div class="ctl"><input type="text" id="t_vat" inputmode="decimal" value="7.00"><span class="suffix">%</span></div>
+          <span class="hint">ใช้เมื่อธนาคารแจ้งค่าธรรมเนียมมาแบบยังไม่รวมภาษี</span>
+        </div>
+        <div class="f">
+          <label for="t_fire">ค่าประกันอัคคีภัย</label>
+          <div class="ctl"><input type="text" id="t_fire" inputmode="decimal" value="1,500"><span class="suffix">บาท/ปี</span></div>
+        </div>
+        <div class="f">
+          <label for="t_mrta">ค่าประกันวงเงินกู้ MRTA</label>
+          <div class="ctl"><input type="text" id="t_mrta" inputmode="decimal" value="0"><span class="suffix">บาท</span></div>
+          <span class="hint">ใส่เฉพาะกรณีธนาคารขอให้ทำใหม่</span>
+        </div>
+        <div class="f">
+          <label for="t_mrta_mode">วิธีจ่าย MRTA</label>
+          <select id="t_mrta_mode"><option value="upfront">จ่ายก้อนเดียวตอนเริ่ม</option><option value="yearly">จ่ายรายปี</option></select>
+        </div>
+      </div>
+      <div class="f" style="margin-top:16px">
+        <label>ค่าใช้จ่ายอื่น ๆ</label>
+        <div class="rows" id="t_other"></div>
+        <button type="button" class="addbtn" data-add="t_other">+ เพิ่มรายการ</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ค่าใช้จ่ายวันโอนกรรมสิทธิ์ (ถ้ามี)</legend>
+      <label class="check"><input type="checkbox" id="t_x_on"> ทางเลือกนี้ก็มีการขายหรือโอนกรรมสิทธิ์ในวันเดียวกันด้วย</label>
+      <p class="hint" style="margin:8px 0 0">ใช้ตัวเลขชุดเดียวกับที่กรอกไว้ในขั้นที่ 2 ไม่ต้องกรอกซ้ำ ถ้าการโอนเกิดขึ้นแน่นอนไม่ว่าจะเลือกทางไหน ให้ติ๊กทั้งสองขั้น ผลเปรียบเทียบจะได้ยุติธรรม เพราะค่าใช้จ่ายก้อนนี้เป็นภาระของทั้งคู่เท่ากัน</p>
+      <div class="note" id="t_x_out" style="margin-top:14px"></div>
+    </fieldset>
+
+    <div class="nav"><button class="btn ghost" data-go="2">ย้อนกลับ</button><button class="btn gold" data-go="4">ดูผลเปรียบเทียบ</button></div>
+  </section>
+
+  <!-- ==================== ขั้นที่ 4 ==================== -->
+  <section id="p4" hidden>
+    <div id="warnings"></div>
+    <div id="verdict"></div>
+    <div class="tablewrap"><table id="tbl-main"></table></div>
+
+    <div class="chartbox">
+      <h3>ต้นทุนสะสมของแต่ละทางเลือก</h3>
+      <p class="lede">เส้นที่ต่ำกว่าคือจ่ายน้อยกว่า จุดวงกลมคือเดือนที่คืนทุนค่าใช้จ่ายเมื่อเทียบกับการอยู่ที่เดิม</p>
+      <div id="chart"></div>
+      <div class="legend" id="chart-legend"></div>
+    </div>
+
+    <div class="tablewrap"><table id="tbl-cost"></table></div>
+
+    <details>
+      <summary>สรุปรายปี</summary>
+      <div class="tablewrap"><table id="tbl-year"></table></div>
+    </details>
+
+    <details>
+      <summary>ตารางผ่อนรายเดือน</summary>
+      <div class="amortbar no-print">
+        <div class="f">
+          <label for="amort-range">ช่วงงวดที่แสดง</label>
+          <select id="amort-range">
+            <option value="horizon">เฉพาะช่วงที่เปรียบเทียบ</option>
+            <option value="full">ทุกงวดจนผ่อนหมด</option>
+          </select>
+        </div>
+        <div class="f">
+          <label for="amort-bank">ธนาคารที่แสดง</label>
+          <select id="amort-bank"><option value="all">ทุกทางเลือก (เทียบกัน)</option></select>
+        </div>
+      </div>
+      <div class="amortnote" id="amort-info"></div>
+      <div class="tablewrap"><table id="tbl-amort"></table></div>
+    </details>
+
+    <div class="note">ตัวเลขทั้งหมดเป็นการประมาณการ โดยคิดดอกเบี้ยแบบลดต้นลดดอกรายเดือน (ยอดคงเหลือ × อัตรา ÷ 12) ธนาคารจริงคิดดอกเบี้ยรายวันตามจำนวนวันในแต่ละเดือน ผลลัพธ์จึงต่างกันเล็กน้อย ยอดที่ใช้จริงให้ยึดตามเอกสารของธนาคารและสำนักงานที่ดิน เครื่องมือนี้ช่วยเปรียบเทียบทางเลือก ไม่ใช่คำแนะนำทางการเงินเฉพาะบุคคล</div>
+
+    <div id="print-foot"></div>
+
+    <div class="exportbar no-print">
+      <button class="btn ghost" data-go="3">ย้อนกลับไปแก้ตัวเลข</button>
+      <button class="btn" id="btn-pdf">บันทึกรายงาน PDF</button>
+      <button class="btn gold" id="btn-xls">ดาวน์โหลด Excel</button>
+      <button class="btn ghost" id="btn-share">แชร์เครื่องมือนี้</button>
+    </div>
+
+  </section>
+
+  <!-- ==================== ฟีดแบ็ก ==================== -->
+  <section class="feedback no-print">
+    <h2>อยากให้เพิ่มอะไรอีกไหม</h2>
+    <p>เครื่องมือนี้ทำคนเดียว ยังมีอีกหลายอย่างที่ทำได้ดีกว่านี้ ถ้ามีอะไรที่ใช้แล้วติดขัด ตัวเลขไม่ตรงกับที่ธนาคารแจ้ง หรืออยากได้ฟังก์ชันเพิ่ม บอกมาได้เลยค่ะ อ่านทุกข้อความ</p>
+
+    <div class="chips" id="fb-chips" role="group" aria-label="หัวข้อที่อยากบอก">
+      <button type="button" class="chip" aria-pressed="false">ตัวเลขไม่ตรงกับธนาคาร</button>
+      <button type="button" class="chip" aria-pressed="false">อยากได้ฟังก์ชันเพิ่ม</button>
+      <button type="button" class="chip" aria-pressed="false">ใช้งานยาก / งง</button>
+      <button type="button" class="chip" aria-pressed="false">เจอบั๊ก</button>
+      <button type="button" class="chip" aria-pressed="false">ชมเฉย ๆ</button>
+    </div>
+
+    <label for="fb-text" class="check" style="padding-bottom:6px">รายละเอียด</label>
+    <textarea id="fb-text" placeholder="เช่น อยากให้เพิ่มการคำนวณลดหย่อนภาษีดอกเบี้ยบ้าน หรือเทียบได้มากกว่า 3 ธนาคารพร้อมกัน"></textarea>
+
+    <div class="grid" style="margin-top:12px">
+      <div class="f">
+        <label for="fb-contact">ช่องทางติดต่อกลับ (ไม่ใส่ก็ได้)</label>
+        <input type="text" id="fb-contact" placeholder="อีเมล หรือ LINE ID" maxlength="80">
+      </div>
+    </div>
+
+    <div class="fb-foot">
+      <button class="btn" id="fb-send">ส่งความเห็น</button>
+      <span class="hint" id="fb-note"></span>
+    </div>
+  </section>
+
+  <!-- ==================== สนับสนุน ==================== -->
+  <section class="support no-print">
+    <h2>เลี้ยงกาแฟคนทำ</h2>
+    <p>ถ้าเครื่องมือนี้ช่วยให้คุณตัดสินใจได้ง่ายขึ้นหรือประหยัดเงินได้จริง จะสมทบทุนค่ากาแฟสักแก้วก็ยินดีมากค่ะ แอปนี้ไม่มีโฆษณาและไม่เก็บข้อมูลใด ๆ</p>
+    <div class="support-body">
+      <figure class="qr-frame" id="qr-frame" hidden>
+        <div id="qr-slot"></div>
+      </figure>
+      <div class="support-side">
+        <details id="owner-setup">
+          <summary style="padding:11px 14px; font-size:14px">ตั้งค่าบัญชีรับเงิน (สำหรับเจ้าของแอป)</summary>
+          <div style="padding:14px">
+            <div class="grid">
+              <div class="f">
+                <label for="pp_id">เลขพร้อมเพย์</label>
+                <input type="text" id="pp_id" placeholder="0812345678" inputmode="numeric">
+                <span class="hint">เบอร์มือถือ 10 หลัก, เลขบัตรประชาชน 13 หลัก หรือ e-Wallet 15 หลัก</span>
+              </div>
+              <div class="f">
+                <label for="pp_amt">ระบุจำนวนเงินล่วงหน้า</label>
+                <div class="ctl"><input type="text" id="pp_amt" inputmode="decimal" placeholder="เว้นว่าง = ผู้โอนกรอกเอง"><span class="suffix">บาท</span></div>
+              </div>
+            </div>
+            <p class="hint" style="margin-top:12px">ช่องนี้ใช้ดูตัวอย่างชั่วคราวเท่านั้น ไม่มีการบันทึกไว้ เมื่อได้ QR ที่ถูกต้องแล้ว ให้ใส่ค่าลงในตัวแปร <code>SUPPORT</code> ที่ต้นสคริปต์ของไฟล์นี้ เพื่อให้แสดงถาวรกับผู้ใช้ทุกคน</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== กล่องเลี้ยงกาแฟก่อนดาวน์โหลด ==================== -->
+  <div class="modal no-print" id="coffee" hidden role="dialog" aria-modal="true" aria-labelledby="coffee-h">
+    <div class="modal-card">
+      <button class="x" id="coffee-x" aria-label="ปิด">&times;</button>
+      <div class="modal-body">
+        <h3 id="coffee-h">ขอเวลา 5 วินาทีค่ะ ☕</h3>
+        <p id="coffee-msg">ไฟล์ของคุณพร้อมแล้ว เครื่องมือนี้ฟรี ไม่มีโฆษณา และไม่เก็บข้อมูลใด ๆ ถ้ามันช่วยให้ตัดสินใจง่ายขึ้น เลี้ยงกาแฟสักแก้วก็ยินดีมากค่ะ</p>
+        <div class="modal-qr" id="coffee-qr" hidden></div>
+        <div class="modal-foot">
+          <button class="btn gold" id="coffee-go">ปิดแล้วดาวน์โหลดต่อ</button>
+          <button class="skip" id="coffee-never">ไม่ต้องแสดงอีกในการใช้งานครั้งนี้</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ชวนแชร์ ==================== -->
+  <div class="modal no-print" id="sharebox" hidden role="dialog" aria-modal="true" aria-labelledby="share-h">
+    <div class="modal-card">
+      <button class="x" id="share-x" aria-label="ปิด">&times;</button>
+      <div class="modal-body">
+        <h3 id="share-h">ถ้าคิดว่ามีประโยชน์ ช่วยส่งต่อให้คนอื่นด้วยนะคะ 🙏</h3>
+        <p>คนไทยจำนวนมากผ่อนบ้านด้วยดอกเบี้ยที่สูงกว่าที่ควรจะเป็น เพราะไม่รู้ว่าขอลดได้หรือย้ายธนาคารแล้วคุ้มกว่า ถ้าเครื่องมือนี้ช่วยคุณได้ ส่งต่อให้เพื่อนหรือคนในครอบครัวสักคนก็ช่วยเขาได้เหมือนกัน</p>
+        <div class="share-icons">
+          <button type="button" id="share-now">แชร์ลิงก์</button>
+          <button type="button" id="share-copy">คัดลอกลิงก์</button>
+        </div>
+        <div class="modal-foot">
+          <button class="skip" id="share-close">ปิดหน้าต่างนี้</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+  <footer class="site">
+    เครื่องคำนวณความคุ้มค่าการรีไฟแนนซ์บ้าน · ทำงานบนเบราว์เซอร์ของคุณทั้งหมด ไม่มีเซิร์ฟเวอร์ ไม่มีฐานข้อมูล ไม่มีคุกกี้ติดตาม
+    <br><span id="site-credit"></span>
+  </footer>
+</main>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════
+   ตั้งค่าบัญชีรับเงินของเจ้าของแอป — แก้เฉพาะบล็อกนี้บล็อกเดียว
+   ═══════════════════════════════════════════════════════════════ */
+const SUPPORT = {
+  promptpay : '004999011597399',        // เลขพร้อมเพย์ (มือถือ 10 / บัตรประชาชน 13 / e-Wallet 15 หลัก)
+  amount    : '',                       // ระบุยอดล่วงหน้า เช่น 50 — เว้นว่างให้ผู้โอนกรอกเอง
+  qrImage   : '',                       // หรือใช้รูป QR ของคุณเอง: 'data:image/png;base64,....'
+  developer : 'Khanittha Phoothong',    // ชื่อผู้พัฒนา แสดงในรายงาน PDF และท้ายหน้า
+  feedbackMail : '',                    // อีเมลรับ feedback — เว้นว่างได้ ระบบจะใช้วิธีคัดลอกข้อความแทน
+  feedbackUrl  : '',                    // URL /exec ของ Apps Script — ใช้ตอนโฮสต์บน GitHub Pages
+  shareUrl  : ''                        // ลิงก์ที่ใช้ตอนกดแชร์ — เว้นว่าง = ใช้ URL ของหน้านี้
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   รายชื่อธนาคารในไทย + สีประจำธนาคาร (ใช้ระบายหัวคอลัมน์ทุกตาราง)
+   c = สีพื้น, f = สีตัวอักษรบนพื้นนั้น
+   ═══════════════════════════════════════════════════════════════ */
+const BANKS = [
+  {code:'BBL',    name:'ธนาคารกรุงเทพ',                 c:'#1E4598', f:'#FFFFFF'},
+  {code:'KBANK',  name:'ธนาคารกสิกรไทย',                c:'#138F2D', f:'#FFFFFF'},
+  {code:'KTB',    name:'ธนาคารกรุงไทย',                 c:'#1BA5E1', f:'#FFFFFF'},
+  {code:'SCB',    name:'ธนาคารไทยพาณิชย์',              c:'#4E2E7F', f:'#FFFFFF'},
+  {code:'ttb',    name:'ธนาคารทหารไทยธนชาต',            c:'#1279BE', f:'#FFFFFF'},
+  {code:'BAY',    name:'ธนาคารกรุงศรีอยุธยา',           c:'#FEC43B', f:'#3A2B00'},
+  {code:'GHB',    name:'ธนาคารอาคารสงเคราะห์ (ธอส.)',   c:'#F57F20', f:'#FFFFFF'},
+  {code:'GSB',    name:'ธนาคารออมสิน',                  c:'#EB198D', f:'#FFFFFF'},
+  {code:'BAAC',   name:'ธนาคารเพื่อการเกษตรฯ (ธ.ก.ส.)', c:'#4B9B1D', f:'#FFFFFF'},
+  {code:'KKP',    name:'ธนาคารเกียรตินาคินภัทร',        c:'#199CC5', f:'#FFFFFF'},
+  {code:'CIMBT',  name:'ธนาคารซีไอเอ็มบี ไทย',          c:'#7E2F36', f:'#FFFFFF'},
+  {code:'TISCO',  name:'ธนาคารทิสโก้',                  c:'#12549F', f:'#FFFFFF'},
+  {code:'UOBT',   name:'ธนาคารยูโอบี',                  c:'#0B3979', f:'#FFFFFF'},
+  {code:'LHBANK', name:'ธนาคารแลนด์ แอนด์ เฮ้าส์',      c:'#6D6E71', f:'#FFFFFF'},
+  {code:'TCD',    name:'ธนาคารไทยเครดิต',               c:'#17335E', f:'#FFFFFF'},
+  {code:'IBANK',  name:'ธนาคารอิสลามแห่งประเทศไทย',     c:'#184615', f:'#FFFFFF'},
+  {code:'SCBT',   name:'ธนาคารสแตนดาร์ดชาร์เตอร์ด',     c:'#0473EA', f:'#FFFFFF'},
+  {code:'ICBCT',  name:'ธนาคารไอซีบีซี (ไทย)',          c:'#C50F1C', f:'#FFFFFF'},
+  {code:'HSBC',   name:'ธนาคารเอชเอสบีซี',              c:'#DB0011', f:'#FFFFFF'},
+  {code:'MEGA',   name:'ธนาคารเมกะ สากลพาณิชย์',        c:'#815A33', f:'#FFFFFF'},
+  {code:'BOCT',   name:'ธนาคารแห่งประเทศจีน (ไทย)',     c:'#C60C30', f:'#FFFFFF'},
+  {code:'SMTB',   name:'ธนาคารซูมิโตโม มิตซุย ทรัสต์',  c:'#5E7A8C', f:'#FFFFFF'},
+  {code:'OTHER',  name:'อื่น ๆ (พิมพ์ชื่อเอง)',          c:'#3E6E8E', f:'#FFFFFF'}
+];
+const bankByCode = c => BANKS.find(b => b.code === c) || BANKS[BANKS.length - 1];
+
+/* ═══════════ เครื่องมือทั่วไป ═══════════ */
+/* ทำสีธนาคารให้เข้มพอจะวางตัวหนังสือขาวได้ ใช้กับการ์ดสรุปผล */
+const rgbOf = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const lumOf = h => { const c = rgbOf(h).map(v => { v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+const scale = (h, k) => '#' + rgbOf(h)
+  .map(v => Math.round(v * k).toString(16).padStart(2, '0')).join('');
+const deepen = (h, target) => { let k = 1;
+  while (k > 0.12 && lumOf(scale(h, k)) > target) k -= 0.04;
+  return scale(h, k); };
+const contrast = (a, b) => { const x = lumOf(a), y = lumOf(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+
+const mix = (hex, pct) => {            // ผสมสีธนาคารกับสีขาว ใช้ทำพื้นอ่อนของหัวคอลัมน์ย่อย
+  const n = parseInt(hex.slice(1), 16), k = pct / 100;
+  const ch = (v) => Math.round(v + (255 - v) * (1 - k));
+  return '#' + [ch(n >> 16 & 255), ch(n >> 8 & 255), ch(n & 255)]
+    .map(v => v.toString(16).padStart(2, '0')).join('');
+};
+const $  = id => document.getElementById(id);
+const r2 = x => Math.round((x + Number.EPSILON) * 100) / 100;
+const nf0 = new Intl.NumberFormat('th-TH', {maximumFractionDigits:0});
+const nf2 = new Intl.NumberFormat('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+const money  = v => (v < 0 ? '−' : '') + nf0.format(Math.abs(Math.round(v)));
+const money2 = v => (v < 0 ? '−' : '') + nf2.format(Math.abs(v));
+const pct = v => nf2.format(v * 100) + '%';
+const num = id => { const el = $(id); if (!el) return 0;
+  const v = parseFloat(String(el.value).replace(/[, ]/g, '')); return isFinite(v) ? v : 0; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ═══════════ 1. เครื่องคำนวณตารางผ่อน ═══════════
+   ถอดสูตรตรงจาก Refinance_Analysis.xlsx ชีต 3_ตารางผ่อน
+     อัตราของงวด   = ปีที่ 1-3 ใช้อัตราโปรฯ, ปีที่ 4+ ใช้อัตราลอยตัว
+     ดอกเบี้ยงวด    = ROUND(ยอดยกมา × อัตรา ÷ 12, 2)
+     เงินต้นที่ตัด  = MIN(ค่างวด + โปะ, ยอดยกมา + ดอกเบี้ย) − ดอกเบี้ย
+     ยอดคงเหลือ    = ROUND(ยอดยกมา − เงินต้นที่ตัด, 2)                     */
+function buildSchedule(o){
+  const maxM = o.maxMonths || 420, rows = [];
+  let bal = r2(o.principal);
+  for (let m = 1; m <= maxM; m++){
+    const year = Math.floor((m - 1) / 12) + 1;
+    const rate = year <= 3 ? o.rates[year - 1] : o.rates[3];
+    const open = bal;
+    const interest  = open <= 0 ? 0 : r2(open * rate / 12);
+    const pay       = open <= 0 ? 0 : Math.min(o.installment, open + interest);
+    const cash      = open <= 0 ? 0 : Math.min(o.installment + (o.extra || 0), open + interest);
+    const principal = open <= 0 ? 0 : cash - interest;
+    const close = r2(open - principal);
+    rows.push({m, year, rate, open, interest, pay, extra:r2(cash - pay),
+               principal:r2(principal), cash:r2(cash), close});
+    bal = close;
+  }
+  return rows;
+}
+
+/* ═══════════ 2. แบบจำลองต้นทุนของแต่ละทางเลือก ═══════════
+   ต้นทุนสุทธิในช่วง = เงินที่จ่ายออกทั้งหมด + หนี้ที่เหลือตอนสิ้นช่วง
+                      − วงเงินกู้ + ค่าธรรมเนียมที่รวมเข้าวงเงิน
+   กรณีปกติ (วงเงิน = ยอดหนี้เดิม และไม่รวมเบี้ยเข้าวงเงิน) สูตรนี้ยุบลงเหลือ
+   ดอกเบี้ย + ค่าใช้จ่าย ซึ่งตรงกับชีต 2_เปรียบเทียบธนาคาร ทุกประการ        */
+function scenario(cfg){
+  const H = cfg.horizon, M = H * 12;
+  const financed = cfg.financedFees || 0;
+  const rows = buildSchedule({
+    principal: cfg.loanAmount + financed,
+    installment: cfg.installment,
+    rates: cfg.rates,
+    extra: cfg.extra,
+    maxMonths: 420
+  });
+  const slice = rows.slice(0, M);
+  const interest      = r2(slice.reduce((s, x) => s + x.interest, 0));
+  const cashPaid      = r2(slice.reduce((s, x) => s + x.cash, 0));
+  const principalPaid = r2(slice.reduce((s, x) => s + x.principal, 0));
+  const endBalance    = M > 0 ? rows[M - 1].close : cfg.loanAmount;
+
+  const upfront = cfg.upfront || 0, yearly = cfg.yearly || 0;
+  const feesTotal = r2(upfront + yearly * H + financed);
+  const netCost   = r2(cashPaid + upfront + yearly * H + endBalance - cfg.loanAmount + financed);
+
+  // ต้นทุนสะสมรายเดือน ใช้หาจุดคุ้มทุนและวาดกราฟ
+  const cum = [r2(upfront + financed)];
+  let c = 0;
+  for (let i = 0; i < M; i++){
+    c += rows[i].cash;
+    cum.push(r2(c + upfront + yearly * Math.ceil((i + 1) / 12)
+               + rows[i].close - cfg.loanAmount + financed));
+  }
+
+  const payoffIdx = rows.findIndex(x => x.close <= 0);
+  const payoffMonths = payoffIdx === -1 ? null : payoffIdx + 1;
+  const fullInterest = r2(rows.reduce((s, x) => s + x.interest, 0));
+
+  const byYear = [];
+  for (let y = 1; y <= Math.max(H, 3); y++){
+    const g = rows.filter(x => x.year === y);
+    byYear.push({year:y,
+      interest: r2(g.reduce((s, x) => s + x.interest, 0)),
+      principal: r2(g.reduce((s, x) => s + x.principal, 0)),
+      close: g.length ? g[g.length - 1].close : 0});
+  }
+  return {label:cfg.label, short:cfg.short || cfg.label, bank:cfg.bank || {code:'—', name:cfg.label, c:'#3E6E8E', f:'#fff', solid:true},
+    rows, interest, cashPaid, principalPaid, endBalance,
+    upfront:r2(upfront), yearlyCost:r2(yearly), financed:r2(financed),
+    feesTotal, netCost, cum, payoffMonths, fullInterest, byYear,
+    firstInterest:rows[0].interest, installment:cfg.installment, rates:cfg.rates,
+    loanAmount:cfg.loanAmount, breakdown:cfg.breakdown || []};
+}
+
+/* ═══════════ 3. รายการค่าใช้จ่ายอื่น ๆ ที่เพิ่มเองได้ ═══════════ */
+function addRow(host, name, amount, type){
+  const div = document.createElement('div');
+  div.className = 'row-item';
+  div.innerHTML =
+    '<input type="text" class="o-name" placeholder="ชื่อค่าใช้จ่าย" value="' + esc(name || '') + '">' +
+    '<input type="text" class="o-amt" inputmode="decimal" placeholder="0" value="' + esc(amount || '') + '">' +
+    '<select class="o-type"><option value="once">ครั้งเดียว</option><option value="yearly">ต่อปี</option></select>' +
+    '<button type="button" class="del" title="ลบรายการ">×</button>';
+  div.querySelector('.o-type').value = type || 'once';
+  div.querySelector('.del').onclick = () => div.remove();
+  $(host).appendChild(div);
+}
+function readRows(host){
+  return [...$(host).querySelectorAll('.row-item')].map(d => ({
+    name: d.querySelector('.o-name').value.trim() || 'ค่าใช้จ่ายอื่น',
+    amount: (() => { const v = parseFloat(d.querySelector('.o-amt').value.replace(/[, ]/g, ''));
+                     return isFinite(v) ? v : 0; })(),
+    type: d.querySelector('.o-type').value
+  })).filter(x => x.amount !== 0);
+}
+document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => addRow(b.dataset.add));
+
+/* ═══════════ 3.5 ตัวเลือกธนาคาร ═══════════ */
+function fillBankSelect(id, defCode){
+  const el = $(id);
+  el.innerHTML = BANKS.map(b => '<option value="' + b.code + '">' + esc(b.name) + '</option>').join('');
+  el.value = defCode;
+  el.addEventListener('change', () => { syncBankOther(id); paintBankChips(); });
+  syncBankOther(id);
+}
+function syncBankOther(id){
+  const other = $(id + '_other');
+  if (other) other.hidden = ($(id).value !== 'OTHER');
+}
+/* คืนข้อมูลธนาคารที่เลือก พร้อมชื่อที่ผู้ใช้พิมพ์เองกรณีเลือก "อื่น ๆ" */
+function pickBank(id){
+  const b = bankByCode($(id).value), other = $(id + '_other');
+  const custom = (other && other.value.trim()) || '';
+  return (b.code === 'OTHER' && custom)
+    ? {code:'—', name:custom, c:b.c, f:b.f}
+    : {code:b.code, name:b.name, c:b.c, f:b.f};
+}
+function paintBankChips(){
+  const cur = pickBank('cur_bank'), chip = $('ret-bankchip');
+  chip.textContent = cur.name;
+  chip.style.setProperty('--bk', cur.c);
+  chip.style.setProperty('--bf', cur.f);
+}
+fillBankSelect('cur_bank', 'KBANK');
+fillBankSelect('r_bank', 'SCB');
+['cur_bank_other', 'r_bank_other'].forEach(id => $(id).addEventListener('input', paintBankChips));
+paintBankChips();
+
+/* ═══════════ 3.6 ค่าใช้จ่ายวันโอนกรรมสิทธิ์ ═══════════
+   พอร์ตตรงจากชีต 1_ค่าใช้จ่ายวันโอน ของไฟล์ Excel ต้นฉบับ
+   ภาษีเงินได้หัก ณ ที่จ่ายตามมาตรา 50(5): คิดจากราคาประเมินของกรมที่ดิน
+   ไม่ใช่ราคาซื้อขาย และไม่มีเงินได้ยกเว้น 150,000 บาทแรกเหมือนภาษีเงินได้ปกติ
+   ═══════════════════════════════════════════════════════ */
+const DEDUCT_BY_YEAR = [0.92, 0.84, 0.77, 0.71, 0.65, 0.60, 0.55, 0.50];  // ปีที่ 1–8 ขึ้นไป
+const WHT_STEPS = [0, 300000, 500000, 750000, 1000000, 2000000, 5000000]; // ขั้นละ 5%
+
+/* ภาษีเงินได้หัก ณ ที่จ่าย ณ สำนักงานที่ดิน */
+function withholdingTax(appraised, price, years){
+  const y = Math.max(1, Math.round(years) || 1);
+  const deduct  = DEDUCT_BY_YEAR[Math.min(y, 8) - 1];
+  const divisor = Math.min(y, 10);
+  const net = Math.max(0, appraised - appraised * deduct);   // เงินได้สุทธิหลังหักค่าใช้จ่ายเหมาจ่าย
+  const avg = net / divisor;                                  // เงินได้เฉลี่ยต่อปี
+  const perYear = WHT_STEPS.reduce((t, b) => t + (avg > b ? (avg - b) * 0.05 : 0), 0);
+  const cap = Math.max(appraised, price) * 0.20;              // เพดาน 20%
+  return r2(Math.min(perYear * divisor, cap));
+}
+
+function transferCosts(){
+  if (!$('x_on').checked) return {total:0, lines:[], raw:null};
+  const appr    = num('x_appraisal') * (num('x_share') || 100) / 100;  // ราคาประเมินส่วนที่โอน
+  const price   = num('x_price') || appr;   // เว้นว่าง = ยึดราคาประเมินส่วนที่โอน
+  const taxBase = Math.max(appr, price);
+  const years   = num('x_years');
+  const feeFull = r2(appr * ($('x_gov').checked ? 0.0001 : 0.02));
+  const fee     = $('x_fee_bank').checked ? 0 : r2(feeFull * num('x_fee_pct') / 100);
+  const sbt     = (years >= 5 || $('x_reg').checked) ? 0 : r2(taxBase * 0.033);
+  const stamp   = sbt > 0 ? 0 : r2(taxBase * 0.005);          // เสียอย่างใดอย่างหนึ่ง ไม่ซ้อนกัน
+  const wht     = withholdingTax(appr, price, years);
+  const share   = num('x_tax_pct') / 100;
+  const lines = [
+    {k:'ค่าธรรมเนียมการโอนกรรมสิทธิ์', v:fee},
+    {k:'ภาษีธุรกิจเฉพาะ 3.3%',        v:r2(sbt   * share)},
+    {k:'อากรแสตมป์การโอน 0.5%',       v:r2(stamp * share)},
+    {k:'ภาษีเงินได้หัก ณ ที่จ่าย',      v:r2(wht   * share)},
+    {k:'ค่าเบ็ดเตล็ดวันโอน',           v:num('x_misc')}
+  ];
+  return {total:lines.reduce((t, l) => t + l.v, 0), lines,
+          raw:{appr, taxBase, feeFull, sbt, stamp, wht}};
+}
+
+/* พรีวิวใต้ฟอร์ม ให้เห็นยอดภาษีเต็มจำนวนก่อนหารภาระ */
+function renderTransfer(){
+  $('x_box').hidden = !$('x_on').checked;
+  if (!$('x_on').checked){ $('x_out').innerHTML = ''; return; }
+  const t = transferCosts(), r = t.raw;
+  $('x_out').innerHTML =
+    '<b>ยอดเต็มก่อนแบ่งภาระ</b> · ราคาประเมินส่วนที่โอน ' + money(r.appr) + ' บาท'
+    + ' · ค่าธรรมเนียมโอน ' + money(r.feeFull) + ' บาท'
+    + (r.sbt > 0 ? ' · ภาษีธุรกิจเฉพาะ ' + money(r.sbt) + ' บาท'
+                 : ' · อากรแสตมป์ ' + money(r.stamp) + ' บาท')
+    + ' · <b>ภาษีเงินได้หัก ณ ที่จ่าย ' + money(r.wht) + ' บาท</b>'
+    + '<br><b>รวมที่เราต้องจ่ายจริง ' + money(t.total) + ' บาท</b>'
+    + (r.sbt > 0
+        ? ' · เสียภาษีธุรกิจเฉพาะเพราะผู้ขายถือครองไม่ถึง 5 ปีและไม่มีชื่อในทะเบียนบ้านเกิน 1 ปี จึงไม่ต้องเสียอากรแสตมป์ซ้ำ'
+        : ' · ได้รับยกเว้นภาษีธุรกิจเฉพาะ จึงเสียอากรแสตมป์แทน');
+}
+/* สรุปของขั้นที่ 3 ซึ่งใช้ตัวเลขชุดเดียวกับขั้นที่ 2 */
+function renderTransferRet(){
+  const box = $('t_x_out');
+  if (!$('t_x_on').checked){
+    box.innerHTML = 'ยังไม่ได้ติ๊ก ค่าใช้จ่ายวันโอนจะไม่ถูกนำมาคิดกับทางเลือกนี้';
+    return;
+  }
+  if (!$('x_on').checked){
+    box.innerHTML = '<b>ยังไม่ได้กรอกข้อมูลวันโอนในขั้นที่ 2</b> '
+      + 'กลับไปติ๊ก “วันเดียวกันนี้มีการขายหรือโอนกรรมสิทธิ์ด้วย” แล้วกรอกราคาประเมินและปีที่ถือครองก่อน '
+      + 'ตอนนี้ระบบยังคิดค่าใช้จ่ายวันโอนของทางเลือกนี้เป็น 0';
+    return;
+  }
+  const t = transferCosts();
+  box.innerHTML = 'ใช้ตัวเลขชุดเดียวกับขั้นที่ 2 · '
+    + t.lines.filter(l => l.v > 0).map(l => esc(l.k) + ' ' + money(l.v) + ' บาท').join(' · ')
+    + '<br><b>รวมที่บวกเข้าทางเลือกนี้ ' + money(t.total) + ' บาท</b>';
+}
+
+['x_appraisal','x_share','x_price','x_years','x_misc','x_fee_pct','x_tax_pct']
+  .forEach(id => $(id).addEventListener('input', () => { renderTransfer(); renderTransferRet(); }));
+['x_on','x_reg','x_gov','x_fee_bank']
+  .forEach(id => $(id).addEventListener('change', () => { renderTransfer(); renderTransferRet(); }));
+$('t_x_on').addEventListener('change', renderTransferRet);
+renderTransfer();
+renderTransferRet();
+
+/* ═══════════ 4. อ่านค่าจากฟอร์มแล้วคำนวณ ═══════════ */
+let MODEL = null;
+
+function collect(){
+  const P = num('principal');
+  const H = Math.max(1, Math.min(35, Math.round(num('horizon')) || 3));
+  const X = num('extra');
+  const curBank = pickBank('cur_bank'), newBank = pickBank('r_bank');
+
+  const pack = (fireId, mrtaId, modeId, otherHost, extraUpfront) => {
+    const others = readRows(otherHost);
+    const fire = num(fireId), mrta = num(mrtaId), mode = $(modeId).value;
+    const onceOther   = others.filter(o => o.type === 'once').reduce((s, o) => s + o.amount, 0);
+    const yearlyOther = others.filter(o => o.type === 'yearly').reduce((s, o) => s + o.amount, 0);
+    return {
+      upfront: extraUpfront + onceOther + (mode === 'upfront' ? mrta : 0),
+      yearly : fire + yearlyOther + (mode === 'yearly' ? mrta : 0),
+      fire, mrta, mode, others
+    };
+  };
+  const otherLines = (p) => p.others.map(o => ({
+    k: o.name + (o.type === 'yearly' ? ' (' + H + ' ปี)' : ''),
+    v: o.type === 'yearly' ? o.amount * H : o.amount }));
+
+  /* --- ทางเลือก ก: อยู่ที่เดิมเฉย ๆ --- */
+  const bRate  = num('baseRate') / 100;
+  const bAfter = (num('baseAfter') || num('baseRate')) / 100;
+  const bUntil = Math.min(3, Math.max(1, Math.round(num('baseUntil')) || 3));
+  // ปีที่ 1-3 ใช้อัตราปัจจุบันจนถึงปีที่โปรฯ หมด จากนั้นเป็นอัตราลอยตัว
+  const bRates = [1, 2, 3].map(y => y <= bUntil ? bRate : bAfter).concat([bAfter]);
+  const b = pack('b_fire', 'b_mrta', 'b_mrta_mode', 'b_other', 0);
+  const base = scenario({
+    label:'อยู่ที่เดิมเฉย ๆ', short:'อยู่เฉย ๆ',
+    bank:{...curBank, solid:false}, horizon:H, loanAmount:P, installment:num('installment'), extra:X,
+    rates:bRates, upfront:b.upfront, yearly:b.yearly,
+    breakdown:[
+      {k:'ค่าประกันอัคคีภัย (' + H + ' ปี)', v:b.fire * H},
+      {k:'ค่าประกันวงเงินกู้ MRTA', v:b.mode === 'yearly' ? b.mrta * H : b.mrta},
+      ...otherLines(b)
+    ]
+  });
+
+  /* --- ทางเลือก ข: รีไฟแนนซ์ --- */
+  const rLoan     = num('r_loan') || P;
+  const rMortgage = $('r_mortgage_bank').checked ? 0 : num('r_mortgage');
+  const rStamp    = $('r_stamp_bank').checked    ? 0 : num('r_stamp');
+  // ภาษีมูลค่าเพิ่มของค่าบริการที่ธนาคารแจ้งมาแบบยังไม่รวมภาษี
+  // ค่าจดจำนองและอากรแสตมป์เป็นค่าธรรมเนียม/ภาษีของภาครัฐ จึงไม่คิด VAT ซ้อน
+  const rVatRate = num('r_vat') / 100;
+  const rVatBase = ($('r_appraise_vat').checked ? num('r_appraise') : 0)
+                 + ($('r_fee_vat').checked      ? num('r_fee')      : 0);
+  const rVat      = r2(rVatBase * rVatRate);
+  const xfer      = transferCosts();
+  const rOnce     = rMortgage + rStamp + num('r_appraise') + num('r_fee') + num('r_penalty')
+                  + rVat + xfer.total;
+  const rFin      = $('r_mrta_fin').checked ? num('r_mrta') : 0;
+  const rp = pack('r_fire', 'r_mrta', 'r_mrta_mode', 'r_other', rOnce);
+  if (rFin && $('r_mrta_mode').value === 'upfront') rp.upfront -= num('r_mrta');
+  if (rFin && $('r_mrta_mode').value === 'yearly')  rp.yearly  -= num('r_mrta');
+  const refi = scenario({
+    label:'รีไฟแนนซ์ → ' + newBank.name, short:'รีไฟแนนซ์',
+    bank:{...newBank, solid:true}, horizon:H, loanAmount:rLoan,
+    installment:num('r_inst') || num('installment'), extra:X, financedFees:rFin,
+    rates:[num('r_r1')/100, num('r_r2')/100, num('r_r3')/100, num('r_rf')/100],
+    upfront:rp.upfront, yearly:rp.yearly,
+    breakdown:[
+      {k:'ค่าจดจำนอง', v:rMortgage},
+      {k:'อากรแสตมป์สัญญากู้', v:rStamp},
+      {k:'ค่าประเมินราคาหลักประกัน', v:num('r_appraise')},
+      {k:'ค่าธรรมเนียมธนาคาร', v:num('r_fee')},
+      {k:'ค่าปรับไถ่ถอนก่อนกำหนด', v:num('r_penalty')},
+      {k:'ภาษีมูลค่าเพิ่ม ' + pct(rVatRate) + ' ของค่าบริการ', v:rVat},
+      ...xfer.lines,
+      {k:'ค่าประกันอัคคีภัย (' + H + ' ปี)', v:rp.fire * H},
+      {k:'ค่าประกันวงเงินกู้ MRTA' + (rFin ? ' (รวมในวงเงินกู้)' : ''),
+       v:rp.mode === 'yearly' ? num('r_mrta') * H : num('r_mrta')},
+      ...otherLines(rp)
+    ]
+  });
+
+  /* --- ทางเลือก ค: ขอลดดอกเบี้ยกับธนาคารเดิม --- */
+  const tVatRate = num('t_vat') / 100;
+  const tVat = $('t_fee_vat').checked ? r2(num('t_fee') * tVatRate) : 0;
+  // ถ้าการโอนกรรมสิทธิ์เกิดกับทางเลือกนี้ด้วย ใช้ตัวเลขชุดเดียวกับขั้นที่ 2
+  const xferT = $('t_x_on').checked ? xfer : {total:0, lines:[]};
+  const tp = pack('t_fire', 't_mrta', 't_mrta_mode', 't_other', num('t_fee') + tVat + xferT.total);
+  const ret = scenario({
+    label:'ขอลดดอกเบี้ย → ' + curBank.name, short:'ขอลดดอกเบี้ย',
+    bank:{...curBank, solid:true}, horizon:H, loanAmount:P,
+    installment:num('t_inst') || num('installment'), extra:X,
+    rates:[num('t_r1')/100, num('t_r2')/100, num('t_r3')/100, num('t_rf')/100],
+    upfront:tp.upfront, yearly:tp.yearly,
+    breakdown:[
+      {k:'ค่าธรรมเนียมขอลดดอกเบี้ย', v:num('t_fee')},
+      {k:'ภาษีมูลค่าเพิ่ม ' + pct(tVatRate) + ' ของค่าบริการ', v:tVat},
+      ...xferT.lines,
+      {k:'ค่าประกันอัคคีภัย (' + H + ' ปี)', v:tp.fire * H},
+      {k:'ค่าประกันวงเงินกู้ MRTA', v:tp.mode === 'yearly' ? tp.mrta * H : tp.mrta},
+      ...otherLines(tp)
+    ]
+  });
+
+  // จุดคุ้มทุน = เดือนแรกที่ต้นทุนสะสมต่ำกว่าหรือเท่ากับการอยู่ที่เดิมเฉย ๆ
+  const breakEven = s => {
+    for (let i = 0; i < Math.min(s.cum.length, base.cum.length); i++)
+      if (s.cum[i] <= base.cum[i]) return i;
+    return null;
+  };
+  const list = [base, refi, ret];
+  const best = list.reduce((a, s) => s.netCost < a.netCost ? s : a);
+  return {H, P, extra:X, base, refi, ret, list, best,
+          beRefi:breakEven(refi), beRet:breakEven(ret)};
+}
+
+/* ═══════════ 5. แสดงผล ═══════════ */
+/* หัวคอลัมน์ระบายสีประจำธนาคาร — ใช้ร่วมกันทุกตาราง */
+function thBank(s, extra, colspan){
+  const b = s.bank;
+  return '<th class="bk' + (b.solid ? '' : ' outline') + (extra || '') + '"'
+    + (colspan ? ' colspan="' + colspan + '"' : '')
+    + ' style="--bk:' + b.c + ';--bf:' + b.f + '">'
+    + ((extra || '').indexOf('win') >= 0 ? '<span class="crown">★ ถูกที่สุด</span><br>' : '')
+    + '<span class="bcode">' + esc(b.code) + '</span>'
+    + '<span class="bname">' + esc(s.short) + '</span>'
+    + '<small style="display:block;font-weight:400;opacity:.85;font-size:11px;margin-top:2px">'
+    + esc(b.name) + '</small></th>';
+}
+function render(){
+  const M = MODEL = collect();
+  const {H, base, list, best} = M;
+
+  const bad = list.filter(s => s.installment + M.extra <= s.firstInterest);
+  $('warnings').innerHTML = bad.length
+    ? '<div class="alert">ค่างวดของ “' + bad.map(s => esc(s.label)).join('” และ “')
+      + '” น้อยกว่าดอกเบี้ยงวดแรก หนี้จะไม่ลดลง แก้ค่างวดให้สูงกว่าดอกเบี้ยก่อนอ่านผล</div>'
+    : '';
+
+  /* ── คำตัดสิน ── */
+  const others  = list.filter(s => s !== best).sort((a, b) => a.netCost - b.netCost);
+  const gapNext = r2(others[0].netCost - best.netCost);
+  const gapBase = r2(base.netCost - best.netCost);
+  const be = best === M.refi ? M.beRefi : best === M.ret ? M.beRet : null;
+  const beLabel = best === base ? 'ไม่มีค่าใช้จ่ายในการย้าย'
+    : be === null ? 'ยังไม่คืนทุนภายใน ' + H + ' ปี'
+    : be === 0    ? 'คุ้มทุนทันที'
+    : 'เดือนที่ ' + be + (be >= 12 ? ' (' + Math.floor(be / 12) + ' ปี ' + (be % 12) + ' เดือน)' : '');
+
+  const vb = best.bank;
+  const v1 = deepen(vb.c, 0.13), v2 = scale(v1, 0.58);
+  // เจือสีธนาคารกับขาวจนอ่านบนพื้นการ์ดได้สบายตา (คอนทราสต์อย่างน้อย 4.5:1)
+  let vp = 45, vt = mix(vb.c, vp);
+  while (vp > 5 && contrast(vt, v1) < 4.5){ vp -= 5; vt = mix(vb.c, vp); }
+  $('verdict').innerHTML =
+    '<div class="verdict" style="--v1:' + v1 + ';--v2:' + v2 + ';--vc:' + vb.c + ';--vt:' + vt + '">'
+    + '<div class="vhead"><span class="vcode">' + esc(vb.code) + '</span>'
+    + '<span class="kicker">ทางเลือกที่จ่ายน้อยที่สุดในช่วง ' + H + ' ปี · ' + esc(vb.name) + '</span></div>'
+    + '<h2>' + esc(best.label) + '</h2>'
+    + '<div class="big">' + money(gapBase) + ' บาท<small>ประหยัดกว่าการอยู่ที่เดิมเฉย ๆ</small></div>'
+    + '<div class="facts">'
+      + '<div>ต้นทุนรวม ' + H + ' ปี<b>' + money(best.netCost) + ' บาท</b></div>'
+      + '<div>ห่างจากอันดับสอง (' + esc(others[0].label) + ')<b>' + money(gapNext) + ' บาท</b></div>'
+      + '<div>จุดคุ้มทุน<b>' + beLabel + '</b></div>'
+      + '<div>เงินสดที่ต้องเตรียมวันแรก<b>' + money(best.upfront) + ' บาท</b></div>'
+    + '</div></div>';
+
+  /* ── ตารางเปรียบเทียบหลัก ── */
+  const wc = list.map(s => s === best ? ' class="win"' : '');
+  const row = (label, fn, cls) =>
+    '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td>'
+    + list.map((s, i) => '<td' + (cls === 'total' ? wc[i] : '') + '>' + fn(s) + '</td>').join('') + '</tr>';
+
+  $('tbl-main').innerHTML =
+    '<caption>เปรียบเทียบต้นทุนในช่วง ' + H + ' ปี<small>คอลัมน์ที่ไฮไลต์คือทางเลือกที่จ่ายน้อยที่สุด</small></caption>'
+    + '<thead><tr><th>รายการ</th>' + list.map((s, i) => thBank(s, wc[i] ? ' win' : '')).join('')
+    + '</tr></thead><tbody>'
+    + row('ดอกเบี้ยปีที่ 1 / 2 / 3', s => pct(s.rates[0]) + ' · ' + pct(s.rates[1]) + ' · ' + pct(s.rates[2]))
+    + row('ดอกเบี้ยปีที่ 4 เป็นต้นไป', s => pct(s.rates[3]))
+    + row('ค่างวดต่อเดือน', s => money(s.installment))
+    + row('เงินต้นตั้งต้น', s => money(s.loanAmount + s.financed))
+    + row('ดอกเบี้ยที่จ่ายในช่วง ' + H + ' ปี', s => money(s.interest))
+    + row('ค่าใช้จ่าย + ค่าประกันในช่วง', s => money(s.feesTotal))
+    + row('เงินต้นที่ตัดได้ในช่วง', s => money(s.principalPaid))
+    + row('หนี้คงเหลือเมื่อครบ ' + H + ' ปี', s => money(s.endBalance))
+    + row('ต้นทุนรวมสุทธิ ' + H + ' ปี', s => money(s.netCost), 'total')
+    + row('ส่วนต่างจากทางเลือกที่ดีที่สุด',
+        s => s === best ? '—' : '<span class="neg">+' + money(s.netCost - best.netCost) + '</span>')
+    + '<tr class="sub"><td colspan="' + (list.length + 1) + '" style="text-align:left">ภาพรวมถ้าผ่อนต่อจนหมดด้วยค่างวดนี้</td></tr>'
+    + row('ผ่อนหมดใน', s => s.payoffMonths
+        ? Math.floor(s.payoffMonths / 12) + ' ปี ' + (s.payoffMonths % 12) + ' เดือน' : 'เกิน 35 ปี')
+    + row('ดอกเบี้ยรวมทั้งสัญญา', s => money(s.fullInterest))
+    + '</tbody>';
+
+  /* ── ตารางค่าใช้จ่ายแยกรายการ ── */
+  const keys = [...new Set(list.flatMap(s => s.breakdown.map(b => b.k)))];
+  const get  = (s, k) => { const f = s.breakdown.find(b => b.k === k); return f ? f.v : 0; };
+  $('tbl-cost').innerHTML =
+    '<caption>ค่าใช้จ่ายและค่าประกันตลอด ' + H + ' ปี<small>ทุกอย่างที่ต้องควักจ่ายนอกเหนือจากดอกเบี้ย</small></caption>'
+    + '<thead><tr><th>รายการ</th>' + list.map((s, i) => thBank(s, wc[i] ? ' win' : '')).join('')
+    + '</tr></thead><tbody>'
+    + keys.filter(k => list.some(s => get(s, k) !== 0))
+        .map(k => '<tr><td>' + esc(k) + '</td>'
+          + list.map(s => '<td>' + (get(s, k) ? money(get(s, k)) : '—') + '</td>').join('') + '</tr>').join('')
+    + '<tr class="total"><td>รวมค่าใช้จ่าย</td>'
+      + list.map((s, i) => '<td' + wc[i] + '>' + money(s.feesTotal) + '</td>').join('') + '</tr>'
+    + '<tr class="sub"><td>ในจำนวนนี้ต้องจ่ายเป็นเงินสดวันแรก</td>'
+      + list.map(s => '<td>' + money(s.upfront) + '</td>').join('') + '</tr>'
+    + '</tbody>';
+
+  /* ── สรุปรายปี ── */
+  let yh = '<caption>ดอกเบี้ยและหนี้คงเหลือในแต่ละปี</caption><thead><tr><th rowspan="2">ปีที่</th>'
+    + list.map(s => thBank(s, '', 2)).join('')
+    + '</tr><tr>' + list.map(s => {
+        const st = ' style="--bk:' + s.bank.c + ';--tint:' + mix(s.bank.c, 12) + '"';
+        return '<th class="bsub"' + st + '>ดอกเบี้ย</th><th class="bsub"' + st + '>คงเหลือสิ้นปี</th>';
+      }).join('')
+    + '</tr></thead><tbody>';
+  for (let y = 1; y <= H; y++)
+    yh += '<tr><td>ปีที่ ' + y + '</td>' + list.map(s => {
+      const g = s.byYear.find(b => b.year === y) || {interest:0, close:0};
+      return '<td>' + money(g.interest) + '</td><td>' + money(g.close) + '</td>';
+    }).join('') + '</tr>';
+  yh += '<tr class="total"><td>รวม ' + H + ' ปี</td>'
+      + list.map(s => '<td>' + money(s.interest) + '</td><td>' + money(s.endBalance) + '</td>').join('')
+      + '</tr></tbody>';
+  $('tbl-year').innerHTML = yh;
+
+  $('chart-legend').innerHTML = list.map(s =>
+    '<span><i style="background:' + s.bank.c + (s.bank.solid ? '' : ';opacity:.55') + '"></i>'
+    + esc(s.short) + ' — ' + esc(s.bank.name) + '</span>').join('');
+
+  const keepSel = $('amort-bank').value;
+  $('amort-bank').innerHTML = '<option value="all">ทุกทางเลือก (เทียบกัน)</option>'
+    + list.map((s, i) => '<option value="' + i + '">' + esc(s.short) + ' — ' + esc(s.bank.name) + '</option>').join('');
+  if ([...$('amort-bank').options].some(o => o.value === keepSel)) $('amort-bank').value = keepSel;
+  renderAmort();
+  renderChart(M);
+  $('print-meta').textContent = 'ยอดหนี้คงเหลือ ' + money(M.P) + ' บาท · เปรียบเทียบ ' + H
+    + ' ปี · จัดทำเมื่อ ' + new Date().toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
+}
+
+const AMORT_COLS = ['อัตรา', 'ยอดยกมา', 'ดอกเบี้ย', 'เงินต้นที่ตัด', 'จ่ายจริง', 'คงเหลือ'];
+
+function renderAmort(){
+  const M = MODEL;
+  const pick = $('amort-bank').value;
+  const show = pick === 'all' ? M.list : [M.list[+pick]];
+  const full = $('amort-range').value === 'full';
+  const longest = Math.max(...show.map(s => s.payoffMonths || 420));
+  const limit   = Math.max(1, full ? longest : Math.min(M.H * 12, longest));
+  const nCol    = AMORT_COLS.length;
+
+  let h = '<caption>ตารางผ่อนรายเดือน<small>'
+    + 'แสดงงวดที่ 1–' + limit + ' จากทั้งหมด ' + longest + ' งวด'
+    + (full ? '' : ' · ช่วงที่ใช้เปรียบเทียบ ' + M.H + ' ปี')
+    + ' · ตรวจทานได้ทุกแถว: ยอดยกมา + ดอกเบี้ย − จ่ายจริง = คงเหลือ</small></caption>'
+    + '<thead><tr><th class="c-m" rowspan="2">งวดที่</th><th class="c-y" rowspan="2">ปีที่</th>'
+    + show.map(s => thBank(s, '', nCol)).join('')
+    + '</tr><tr>'
+    + show.map(s => { const st = ' style="--bk:' + s.bank.c + ';--tint:' + mix(s.bank.c, 12) + '"';
+        return AMORT_COLS.map(t => '<th class="bsub"' + st + '>' + t + '</th>').join(''); }).join('')
+    + '</tr></thead><tbody>';
+
+  const tot = show.map(() => ({i:0, p:0, c:0}));
+  for (let i = 0; i < limit; i++){
+    const cls = [];
+    if (i % 12 === 0 && i > 0) cls.push('ystart');
+    if (show.some(s => s.payoffMonths === i + 1)) cls.push('payoff');
+    h += '<tr' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>'
+       + '<td class="c-m">' + (i + 1) + '</td>'
+       + '<td class="c-y">' + (Math.floor(i / 12) + 1) + '</td>'
+       + show.map((s, k) => {
+           const r = s.rows[i], po = s.payoffMonths, edge = ' style="--edge:' + s.bank.c + '"';
+           if (po && i + 1 > po)
+             return '<td class="bk dim"' + edge + '>—</td>' + '<td class="dim">—</td>'.repeat(nCol - 1);
+           tot[k].i += r.interest; tot[k].p += r.principal; tot[k].c += r.cash;
+           return '<td class="bk"' + edge + '>' + pct(r.rate) + '</td>'
+                + '<td>' + money2(r.open)      + '</td>'
+                + '<td>' + money2(r.interest)  + '</td>'
+                + '<td>' + money2(r.principal) + '</td>'
+                + '<td>' + money2(r.cash)      + '</td>'
+                + '<td>' + money2(r.close)
+                + (po === i + 1 ? '<span class="tag">ปิดหนี้</span>' : '') + '</td>';
+         }).join('') + '</tr>';
+  }
+
+  h += '</tbody><tfoot><tr><td class="c-m" colspan="2">รวมในช่วงที่แสดง (' + limit + ' งวด)</td>'
+     + show.map((s, k) => '<td>—</td><td>—</td>'
+        + '<td>' + money2(r2(tot[k].i)) + '</td>'
+        + '<td>' + money2(r2(tot[k].p)) + '</td>'
+        + '<td>' + money2(r2(tot[k].c)) + '</td>'
+        + '<td>' + money2(s.rows[limit - 1].close) + '</td>').join('')
+     + '</tr></tfoot>';
+  $('tbl-amort').innerHTML = h;
+
+  $('amort-info').innerHTML = M.list.map(s =>
+    '<div><b>' + esc(s.short) + ' — ' + esc(s.bank.name) + '</b> · '
+    + (s.payoffMonths
+        ? 'ผ่อนหมดที่งวดที่ ' + s.payoffMonths + ' ('
+          + Math.floor(s.payoffMonths / 12) + ' ปี ' + (s.payoffMonths % 12) + ' เดือน)'
+          + ' · ดอกเบี้ยรวมทั้งสัญญา ' + money(s.fullInterest) + ' บาท'
+        : 'ด้วยค่างวดนี้ผ่อนไม่หมดภายใน 35 ปี')
+    + '</div>').join('')
+    + '<div style="margin-top:6px">งวดที่เกินกำหนดปิดหนี้ของแต่ละทางเลือกจะแสดงเป็น — ไม่ใช่ 0.00 '
+    + 'เพื่อไม่ให้เข้าใจผิดว่ายังผ่อนอยู่</div>';
+}
+$('amort-range').onchange = renderAmort;
+$('amort-bank').onchange  = renderAmort;
+
+/* ═══════════ 6. กราฟต้นทุนสะสม (SVG ล้วน ไม่ใช้ไลบรารี) ═══════════ */
+function renderChart(M){
+  const W = 780, HH = 300, padL = 66, padR = 14, padT = 14, padB = 34;
+  const series = M.list.map(s => ({s, c:s.bank.c, dash:s.bank.solid ? '' : ' stroke-dasharray="6 4"'}));
+  const n = Math.max(...series.map(x => x.s.cum.length));
+  const vals = series.flatMap(x => x.s.cum);
+  let lo = Math.min(0, ...vals), hi = Math.max(...vals);
+  if (hi === lo) hi = lo + 1;
+  const p = (hi - lo) * 0.08; lo -= p; hi += p;
+  const X = i => padL + (W - padL - padR) * (i / (n - 1 || 1));
+  const Y = v => padT + (HH - padT - padB) * (1 - (v - lo) / (hi - lo));
+
+  let g = '';
+  for (let t = 0; t <= 4; t++){
+    const v = lo + (hi - lo) * t / 4, y = Y(v);
+    g += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1)
+       + '" stroke="#EFEDE6"/><text x="' + (padL - 8) + '" y="' + (y + 4).toFixed(1)
+       + '" text-anchor="end" font-size="11" fill="#63798A">' + money(v) + '</text>';
+  }
+  for (let y = 0; y <= M.H; y++)
+    g += '<text x="' + X(y * 12).toFixed(1) + '" y="' + (HH - 12)
+       + '" text-anchor="middle" font-size="11" fill="#63798A">' + (y === 0 ? 'วันนี้' : 'ปี ' + y) + '</text>';
+
+  const paths = series.map(x => '<path d="'
+    + x.s.cum.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ')
+    + '" fill="none" stroke="' + x.c + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"'
+    + x.dash + '/>').join('');
+
+  let marks = '';
+  [[M.beRefi, M.refi, M.refi.bank.c], [M.beRet, M.ret, M.ret.bank.c]].forEach(([be, s, c]) => {
+    if (be === null || be === 0 || be >= s.cum.length) return;
+    marks += '<circle cx="' + X(be).toFixed(1) + '" cy="' + Y(s.cum[be]).toFixed(1)
+           + '" r="4.5" fill="#fff" stroke="' + c + '" stroke-width="2.4"/>';
+  });
+
+  $('chart').innerHTML = '<svg class="chart" viewBox="0 0 ' + W + ' ' + HH + '" role="img" aria-label="'
+    + 'กราฟเปรียบเทียบต้นทุนสะสมของสามทางเลือกตลอด ' + M.H + ' ปี">' + g
+    + '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (HH - padB) + '" stroke="#E2DFD6"/>'
+    + paths + marks + '</svg>';
+}
+
+/* ═══════════ 7. ส่งออก Excel — ค่าที่คำนวณแล้วเท่านั้น ไม่มีสูตรในเซลล์ ═══════════ */
+const CRCT = (() => { const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){ let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t; })();
+const crc32 = b => { let c = 0xFFFFFFFF;
+  for (let i = 0; i < b.length; i++) c = CRCT[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0; };
+const te = s => new TextEncoder().encode(s);
+const xe = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const colLetter = n => { let s = '';
+  while (n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s; };
+
+function zipStore(files){
+  const parts = [], cd = []; let off = 0;
+  for (const f of files){
+    const nb = te(f.name), db = f.data, crc = crc32(db);
+    const lh = new Uint8Array(30 + nb.length), dv = new DataView(lh.buffer);
+    dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 0x0800, true);
+    dv.setUint32(14, crc, true); dv.setUint32(18, db.length, true); dv.setUint32(22, db.length, true);
+    dv.setUint16(26, nb.length, true); lh.set(nb, 30);
+    parts.push(lh, db);
+    const ch = new Uint8Array(46 + nb.length), cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true); cv.setUint32(16, crc, true);
+    cv.setUint32(20, db.length, true); cv.setUint32(24, db.length, true);
+    cv.setUint16(28, nb.length, true); cv.setUint32(42, off, true); ch.set(nb, 46);
+    cd.push(ch); off += lh.length + db.length;
+  }
+  const cdSize = cd.reduce((s, c) => s + c.length, 0);
+  const eo = new Uint8Array(22), ev = new DataView(eo.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true); ev.setUint32(12, cdSize, true); ev.setUint32(16, off, true);
+  const all = [...parts, ...cd, eo], total = all.reduce((s, a) => s + a.length, 0);
+  const out = new Uint8Array(total); let q = 0;
+  for (const a of all){ out.set(a, q); q += a.length; }
+  return out;
+}
+
+function buildXlsx(sheets, palette){
+  palette = palette || [];   // [{c:'1E4598', dark:false}, ...] → style id เริ่มที่ 5
+  const sheetXml = sh => {
+    let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+      + '<cols><col min="1" max="1" width="42" customWidth="1"/>'
+      + '<col min="2" max="60" width="19" customWidth="1"/></cols><sheetData>';
+    sh.rows.forEach((row, ri) => {
+      x += '<row r="' + (ri + 1) + '">';
+      row.forEach((cell, ci) => {
+        if (cell === null || cell === undefined || cell === '') return;
+        let v = cell, st = 0, isNum;
+        if (typeof cell === 'object'){ v = cell.v; st = cell.s || 0; isNum = (cell.t === 'n'); }
+        else isNum = (typeof cell === 'number');
+        if (v === null || v === undefined || v === '') return;
+        const ref = colLetter(ci + 1) + (ri + 1);
+        x += (isNum && isFinite(v))
+          ? '<c r="' + ref + '" s="' + st + '"><v>' + v + '</v></c>'
+          : '<c r="' + ref + '" s="' + st + '" t="inlineStr"><is><t xml:space="preserve">' + xe(v) + '</t></is></c>';
+      });
+      x += '</row>';
+    });
+    return x + '</sheetData></worksheet>';
+  };
+  const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.00"/>'
+    + '<numFmt numFmtId="165" formatCode="0.00%"/></numFmts>'
+    + '<fonts count="4"><font><sz val="11"/><name val="Arial"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font>'
+    + '<font><b/><sz val="12"/><name val="Arial"/></font>'
+    + '<font><b/><sz val="11"/><color rgb="FF1A1A1A"/><name val="Arial"/></font></fonts>'
+    + '<fills count="' + (3 + palette.length) + '"><fill><patternFill patternType="none"/></fill>'
+    + '<fill><patternFill patternType="gray125"/></fill>'
+    + '<fill><patternFill patternType="solid"><fgColor rgb="FF0E1F2E"/><bgColor indexed="64"/></patternFill></fill>'
+    + palette.map(p => '<fill><patternFill patternType="solid"><fgColor rgb="FF' + p.c
+        + '"/><bgColor indexed="64"/></patternFill></fill>').join('') + '</fills>'
+    + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="' + (5 + palette.length) + '">'
+    + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    + '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'
+    + '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+    + '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+    + '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+    + palette.map((p, i) => '<xf numFmtId="0" fontId="' + (p.dark ? 3 : 1) + '" fillId="' + (3 + i)
+        + '" borderId="0" xfId="0" applyFont="1" applyFill="1"/>').join('')
+    + '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  const files = [
+    {name:'[Content_Types].xml', data:te('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+      + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+      + '<Default Extension="xml" ContentType="application/xml"/>'
+      + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+      + sheets.map((s, i) => '<Override PartName="/xl/worksheets/sheet' + (i + 1)
+        + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')
+      + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+      + '</Types>')},
+    {name:'_rels/.rels', data:te('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+      + '</Relationships>')},
+    {name:'xl/workbook.xml', data:te('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+      + 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+      + sheets.map((s, i) => '<sheet name="' + xe(s.name.slice(0, 31)) + '" sheetId="' + (i + 1)
+        + '" r:id="rId' + (i + 1) + '"/>').join('') + '</sheets></workbook>')},
+    {name:'xl/_rels/workbook.xml.rels', data:te('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + sheets.map((s, i) => '<Relationship Id="rId' + (i + 1)
+        + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'
+        + (i + 1) + '.xml"/>').join('')
+      + '<Relationship Id="rId' + (sheets.length + 1)
+      + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+      + '</Relationships>')},
+    {name:'xl/styles.xml', data:te(styles)},
+    ...sheets.map((s, i) => ({name:'xl/worksheets/sheet' + (i + 1) + '.xml', data:te(sheetXml(s))}))
+  ];
+  return zipStore(files);
+}
+
+function exportExcel(){
+  const M = MODEL, {H, list, best} = M;
+  const HD = t => ({v:t, s:1}), N = v => ({v:r2(v), t:'n', s:2});
+  const PC = v => ({v:Math.round(v * 1e8) / 1e8, t:'n', s:4}), T = t => ({v:t, s:3});
+  const names = list.map(s => s.label);
+  // สีหัวคอลัมน์ประจำธนาคาร: style id 5, 6, 7 ตามลำดับทางเลือก
+  const palette = list.map(s => ({c:s.bank.c.replace('#', '').toUpperCase(),
+                                  dark:(s.bank.f.toUpperCase() !== '#FFFFFF')}));
+  const BH = (i, t) => ({v:t === undefined ? names[i] : t, s:5 + i});
+
+  const s1 = [
+    [T('รายงานเปรียบเทียบ: รีไฟแนนซ์ vs ขอลดดอกเบี้ยกับธนาคารเดิม')],
+    ['จัดทำเมื่อ', new Date().toLocaleString('th-TH')],
+    ['ยอดหนี้คงเหลือตั้งต้น (บาท)', N(M.P)],
+    ['ช่วงเวลาที่ใช้เปรียบเทียบ (ปี)', {v:H, t:'n'}],
+    ['โปะเพิ่มต่อเดือน (บาท)', N(M.extra)],
+    ['ทางเลือกที่จ่ายน้อยที่สุด', best.label],
+    ['ประหยัดกว่าการอยู่ที่เดิม (บาท)', N(M.base.netCost - best.netCost)],
+    [],
+    [HD('รายการ'), ...list.map((s, i) => BH(i))],
+    ['ธนาคาร', ...list.map(s => s.bank.name)],
+    ['ดอกเบี้ยปีที่ 1', ...list.map(s => PC(s.rates[0]))],
+    ['ดอกเบี้ยปีที่ 2', ...list.map(s => PC(s.rates[1]))],
+    ['ดอกเบี้ยปีที่ 3', ...list.map(s => PC(s.rates[2]))],
+    ['ดอกเบี้ยปีที่ 4 เป็นต้นไป', ...list.map(s => PC(s.rates[3]))],
+    ['ค่างวดต่อเดือน (บาท)', ...list.map(s => N(s.installment))],
+    ['เงินต้นตั้งต้น (บาท)', ...list.map(s => N(s.loanAmount + s.financed))],
+    ['ดอกเบี้ยที่จ่ายในช่วง ' + H + ' ปี (บาท)', ...list.map(s => N(s.interest))],
+    ['ค่าใช้จ่าย + ค่าประกันในช่วง (บาท)', ...list.map(s => N(s.feesTotal))],
+    ['เงินสดที่ต้องเตรียมวันแรก (บาท)', ...list.map(s => N(s.upfront))],
+    ['เงินต้นที่ตัดได้ในช่วง (บาท)', ...list.map(s => N(s.principalPaid))],
+    ['หนี้คงเหลือเมื่อครบ ' + H + ' ปี (บาท)', ...list.map(s => N(s.endBalance))],
+    ['ต้นทุนรวมสุทธิ ' + H + ' ปี (บาท)', ...list.map(s => N(s.netCost))],
+    ['ส่วนต่างจากทางเลือกที่ดีที่สุด (บาท)', ...list.map(s => N(s.netCost - best.netCost))],
+    [],
+    ['ผ่อนหมดใน (งวด)', ...list.map(s => s.payoffMonths ? {v:s.payoffMonths, t:'n'} : 'เกิน 420 งวด')],
+    ['ดอกเบี้ยรวมทั้งสัญญา (บาท)', ...list.map(s => N(s.fullInterest))],
+    [],
+    ['จุดคุ้มทุนของการรีไฟแนนซ์ (เดือนที่)',
+      M.beRefi === null ? 'ไม่คืนทุนในช่วงที่เปรียบเทียบ' : {v:M.beRefi, t:'n'}],
+    ['จุดคุ้มทุนของการขอลดดอกเบี้ย (เดือนที่)',
+      M.beRet === null ? 'ไม่คืนทุนในช่วงที่เปรียบเทียบ' : {v:M.beRet, t:'n'}],
+    [],
+    ['หมายเหตุ: ไฟล์นี้บันทึกเป็นค่าที่คำนวณเสร็จแล้ว ไม่มีสูตรในเซลล์ · ดอกเบี้ยคิดแบบลดต้นลดดอกรายเดือน (ยอดคงเหลือ x อัตรา / 12)']
+  ];
+
+  const keys = [...new Set(list.flatMap(s => s.breakdown.map(b => b.k)))];
+  const val = (s, k) => (s.breakdown.find(b => b.k === k) || {v:0}).v;
+  const s2 = [
+    [T('ค่าใช้จ่ายและค่าประกันตลอด ' + H + ' ปี')], [],
+    [HD('รายการ'), ...list.map((s, i) => BH(i))],
+    ...keys.filter(k => list.some(s => val(s, k) !== 0)).map(k => [k, ...list.map(s => N(val(s, k)))]),
+    ['รวมค่าใช้จ่ายทั้งหมด', ...list.map(s => N(s.feesTotal))],
+    ['ในจำนวนนี้ต้องจ่ายเป็นเงินสดวันแรก', ...list.map(s => N(s.upfront))]
+  ];
+
+  const s3 = [
+    [T('สรุปรายปี')], [],
+    [HD('ปีที่'), ...list.flatMap((s, i) => [BH(i, s.short + ' (' + s.bank.name + ') — ดอกเบี้ย'),
+                                             BH(i, s.short + ' (' + s.bank.name + ') — คงเหลือสิ้นปี')])],
+    ...Array.from({length:H}, (_, i) => [{v:i + 1, t:'n'},
+      ...list.flatMap(s => { const g = s.byYear.find(b => b.year === i + 1) || {interest:0, close:0};
+        return [N(g.interest), N(g.close)]; })])
+  ];
+
+  const maxRows = Math.max(...list.map(s => s.payoffMonths || 420));
+  const s4 = [
+    [T('ตารางผ่อนรายเดือน')],
+    ['ทุกแถวตรวจทานได้: ยอดยกมา + ดอกเบี้ย − จ่ายจริง = คงเหลือ · เซลล์ว่างคือปิดหนี้ไปแล้ว'], [],
+    [HD('งวดที่'), HD('ปีที่'), ...list.flatMap((s, i) => AMORT_COLS.map(
+      t => BH(i, s.short + ' (' + s.bank.name + ') — ' + t)))]
+  ];
+  for (let i = 0; i < maxRows; i++){
+    s4.push([{v:i + 1, t:'n'}, {v:Math.floor(i / 12) + 1, t:'n'},
+      ...list.flatMap(s => { const r = s.rows[i], po = s.payoffMonths;
+        return (po && i + 1 > po) ? ['', '', '', '', '', '']
+          : [PC(r.rate), N(r.open), N(r.interest), N(r.principal), N(r.cash), N(r.close)]; })]);
+  }
+
+  const blob = new Blob([buildXlsx([
+    {name:'สรุปเปรียบเทียบ', rows:s1},
+    {name:'รายละเอียดค่าใช้จ่าย', rows:s2},
+    {name:'สรุปรายปี', rows:s3},
+    {name:'ตารางผ่อนรายเดือน', rows:s4}
+  ], palette)], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'เปรียบเทียบรีไฟแนนซ์_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ═══════════ 8. QR พร้อมเพย์ — สร้างในเครื่อง ไม่เรียกเซิร์ฟเวอร์ใด ๆ ═══════════ */
+const QR = (() => {
+  const crc16 = s => { let c = 0xFFFF;
+    for (let i = 0; i < s.length; i++){ c ^= s.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) c = (c & 0x8000) ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
+    return c.toString(16).toUpperCase().padStart(4, '0'); };
+  const tlv = (id, v) => id + String(v.length).padStart(2, '0') + v;
+
+  function payload(target, amount){
+    const d = String(target).replace(/\D/g, '');
+    let acc;
+    if (d.length === 13) acc = tlv('02', d);
+    else if (d.length === 15) acc = tlv('03', d);
+    else if (d.length === 10 || d.length === 9) acc = tlv('01', ('0066' + d.replace(/^0/, '')).padStart(13, '0'));
+    else throw new Error('เลขพร้อมเพย์ต้องเป็นเบอร์มือถือ 10 หลัก เลขบัตรประชาชน 13 หลัก หรือ e-Wallet 15 หลัก');
+    const has = amount && Number(amount) > 0;
+    const p = tlv('00', '01') + tlv('01', has ? '12' : '11')
+      + tlv('29', tlv('00', 'A000000677010111') + acc) + tlv('53', '764')
+      + (has ? tlv('54', Number(amount).toFixed(2)) : '') + tlv('58', 'TH') + '6304';
+    return p + crc16(p);
+  }
+
+  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  (function(){ let x = 1;
+    for (let i = 0; i < 255; i++){ EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11D; }
+    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255]; })();
+  const gmul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+  const gen = n => { let p = [1];
+    for (let i = 0; i < n; i++){ const q = [...p, 0];
+      for (let j = 0; j < p.length; j++) q[j + 1] ^= gmul(p[j], EXP[i]); p = q; }
+    return p; };
+  const rsEnc = (data, n) => { const g = gen(n), res = new Array(n).fill(0);
+    for (const d of data){ const f = d ^ res[0]; res.shift(); res.push(0);
+      if (f !== 0) for (let i = 0; i < n; i++) res[i] ^= gmul(g[i + 1], f); }
+    return res; };
+
+  const RS = {1:{L:[7,[[1,19]]],M:[10,[[1,16]]]}, 2:{L:[10,[[1,34]]],M:[16,[[1,28]]]},
+    3:{L:[15,[[1,55]]],M:[26,[[1,44]]]}, 4:{L:[20,[[1,80]]],M:[18,[[2,32]]]},
+    5:{L:[26,[[1,108]]],M:[24,[[2,43]]]}, 6:{L:[18,[[2,68]]],M:[16,[[4,27]]]},
+    7:{L:[20,[[2,78]]],M:[18,[[4,31]]]}, 8:{L:[24,[[2,97]]],M:[22,[[2,38],[2,39]]]},
+    9:{L:[30,[[2,116]]],M:[22,[[3,36],[2,37]]]}, 10:{L:[18,[[2,68],[2,69]]],M:[26,[[4,43],[1,44]]]}};
+  const ALIGN = {1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],10:[6,28,50]};
+  const AN = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+
+  function encode(text, ecl){
+    ecl = ecl || 'M';
+    const isAN = [...text].every(ch => AN.indexOf(ch) >= 0);
+    const bytes = isAN ? null : Array.from(new TextEncoder().encode(text));
+    const len = isAN ? text.length : bytes.length;
+    const bitLen = v => 4 + (isAN ? (v < 10 ? 9 : 11) : (v < 10 ? 8 : 16))
+      + (isAN ? Math.floor(len / 2) * 11 + (len % 2) * 6 : len * 8);
+    let ver = 0, cap = 0;
+    for (let v = 1; v <= 10; v++){
+      const total = RS[v][ecl][1].reduce((s, [b, d]) => s + b * d, 0);
+      if (bitLen(v) <= total * 8){ ver = v; cap = total; break; }
+    }
+    if (!ver) throw new Error('ข้อมูลยาวเกินความจุ QR');
+    const [ecPer, groups] = RS[ver][ecl], bits = [];
+    const push = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >> i) & 1); };
+    if (isAN){
+      push(2, 4); push(len, ver < 10 ? 9 : 11);
+      for (let i = 0; i + 1 < len; i += 2) push(AN.indexOf(text[i]) * 45 + AN.indexOf(text[i + 1]), 11);
+      if (len % 2) push(AN.indexOf(text[len - 1]), 6);
+    } else { push(4, 4); push(len, ver < 10 ? 8 : 16); for (const b of bytes) push(b, 8); }
+    for (let i = 0; i < 4 && bits.length < cap * 8; i++) bits.push(0);
+    while (bits.length % 8) bits.push(0);
+    const dc = [];
+    for (let i = 0; i < bits.length; i += 8){ let v = 0;
+      for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j]; dc.push(v); }
+    const pads = [0xEC, 0x11]; let pi = 0;
+    while (dc.length < cap) dc.push(pads[pi++ % 2]);
+    const blocks = []; let off = 0;
+    for (const [n, d] of groups) for (let i = 0; i < n; i++){
+      const b = dc.slice(off, off + d); off += d; blocks.push({d:b, e:rsEnc(b, ecPer)}); }
+    const maxD = Math.max(...blocks.map(b => b.d.length)), fin = [];
+    for (let i = 0; i < maxD; i++) for (const b of blocks) if (i < b.d.length) fin.push(b.d[i]);
+    for (let i = 0; i < ecPer; i++) for (const b of blocks) fin.push(b.e[i]);
+    return matrix(fin, ver, ecl);
+  }
+
+  const maskFn = (k, r, c) => { switch (k){
+    case 0: return (r + c) % 2 === 0;  case 1: return r % 2 === 0;  case 2: return c % 3 === 0;
+    case 3: return (r + c) % 3 === 0;  case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+    case 5: return (r * c) % 2 + (r * c) % 3 === 0;
+    case 6: return ((r * c) % 2 + (r * c) % 3) % 2 === 0;
+    default: return ((r + c) % 2 + (r * c) % 3) % 2 === 0; } };
+
+  function penalty(g){
+    const n = g.length; let s = 0;
+    for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++)
+      if (g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) s += 3;
+    const run = get => { for (let r = 0; r < n; r++){ let k = 1;
+      for (let c = 1; c < n; c++){ if (get(r, c) === get(r, c - 1)) k++; else { if (k >= 5) s += 3 + (k - 5); k = 1; } }
+      if (k >= 5) s += 3 + (k - 5); } };
+    run((r, c) => g[r][c]); run((r, c) => g[c][r]);
+    const pat = [true,false,true,true,true,false,true,false,false,false,false];
+    const chk = a => { for (let i = 0; i + 11 <= a.length; i++){ let o1 = true, o2 = true;
+      for (let j = 0; j < 11; j++){ if (a[i + j] !== pat[j]) o1 = false; if (a[i + j] !== pat[10 - j]) o2 = false; }
+      if (o1) s += 40; if (o2) s += 40; } };
+    for (let r = 0; r < n; r++){ chk(g[r]); chk(g.map(x => x[r])); }
+    let dark = 0;
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (g[r][c]) dark++;
+    return s + Math.floor(Math.abs(dark * 100 / (n * n) - 50) / 5) * 10;
+  }
+
+  function matrix(cw, ver, ecl){
+    const size = ver * 4 + 17, m = Array.from({length:size}, () => new Array(size).fill(null));
+    const set = (r, c, v) => { if (r >= 0 && c >= 0 && r < size && c < size) m[r][c] = v; };
+    for (const [fr, fc] of [[0,0], [0,size-7], [size-7,0]])
+      for (let r = -1; r < 8; r++) for (let c = -1; c < 8; c++){
+        const inb = r >= 0 && r < 7 && c >= 0 && c < 7;
+        set(fr + r, fc + c, inb && (r === 0 || r === 6 || c === 0 || c === 6
+          || (r >= 2 && r <= 4 && c >= 2 && c <= 4)));
+      }
+    for (let i = 8; i < size - 8; i++){ set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+    for (const r of ALIGN[ver]) for (const c of ALIGN[ver]){
+      if ((r < 8 && c < 8) || (r < 8 && c > size - 9) || (r > size - 9 && c < 8)) continue;
+      for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++)
+        set(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
+    }
+    for (let i = 0; i < 9; i++){ if (m[8][i] === null) set(8, i, false); if (m[i][8] === null) set(i, 8, false); }
+    for (let i = 0; i < 8; i++){
+      if (m[8][size-1-i] === null) set(8, size-1-i, false);
+      if (m[size-1-i][8] === null) set(size-1-i, 8, false); }
+    set(size - 8, 8, true);
+    if (ver >= 7){
+      let rem = ver << 12;
+      for (let i = 0; i < 6; i++) if (rem & (1 << (17 - i))) rem ^= 0x1F25 << (5 - i);
+      const bv = (ver << 12) | (rem & 0xFFF);
+      for (let i = 0; i < 18; i++){ const b = ((bv >> i) & 1) === 1;
+        set(Math.floor(i / 3), size - 11 + (i % 3), b);
+        set(size - 11 + (i % 3), Math.floor(i / 3), b); }
+    }
+    let best = null;
+    for (let mask = 0; mask < 8; mask++){
+      const g = m.map(r => r.slice());
+      let idx = 0, up = true;
+      for (let col = size - 1; col > 0; col -= 2){
+        if (col === 6) col--;
+        for (let i = 0; i < size; i++){
+          const row = up ? size - 1 - i : i;
+          for (let k = 0; k < 2; k++){
+            const c = col - k;
+            if (g[row][c] !== null) continue;
+            let bit = false;
+            if (idx < cw.length * 8){ bit = ((cw[idx >> 3] >> (7 - (idx & 7))) & 1) === 1; idx++; }
+            if (maskFn(mask, row, c)) bit = !bit;
+            g[row][c] = bit;
+          }
+        }
+        up = !up;
+      }
+      const fmt = ((ecl === 'L' ? 1 : 0) << 3) | mask; let rr = fmt << 10;
+      for (let i = 0; i < 5; i++) if (rr & (1 << (14 - i))) rr ^= 0x537 << (4 - i);
+      const fb = ((fmt << 10) | rr) ^ 0x5412;
+      for (let i = 0; i < 15; i++){
+        const b = ((fb >> (14 - i)) & 1) === 1;
+        if (i < 6) g[8][i] = b; else if (i < 8) g[8][i + 1] = b;
+        else if (i === 8) g[7][8] = b; else g[14 - i][8] = b;
+        if (i < 8) g[size - 1 - i][8] = b; else g[8][size - 15 + i] = b;
+      }
+      g[size - 8][8] = true;
+      const p = penalty(g);
+      if (!best || p < best.p) best = {p, g};
+    }
+    return best.g.map(r => r.map(v => !!v));
+  }
+
+  function svg(text){
+    const m = encode(text, 'M'), n = m.length, q = 3, T = n + q * 2;
+    let d = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+      if (m[r][c]) d += 'M' + (c + q) + ' ' + (r + q) + 'h1v1h-1z';
+    return '<svg viewBox="0 0 ' + T + ' ' + T + '" xmlns="http://www.w3.org/2000/svg" '
+      + 'shape-rendering="crispEdges" role="img" aria-label="คิวอาร์โค้ดพร้อมเพย์">'
+      + '<rect width="' + T + '" height="' + T + '" fill="#fff"/>'
+      + '<path d="' + d + '" fill="#0E1F2E"/></svg>';
+  }
+  return {payload, svg};
+})();
+
+function renderSupport(){
+  const id   = (SUPPORT.promptpay || $('pp_id').value || '').trim();
+  const amt  = String(SUPPORT.amount || $('pp_amt').value || '').replace(/[, ]/g, '').trim();
+  const slot = $('qr-slot'), frame = $('qr-frame');
+
+  if (SUPPORT.qrImage){
+    slot.innerHTML = '<img src="' + esc(SUPPORT.qrImage) + '" alt="คิวอาร์โค้ดสำหรับสนับสนุน">';
+    frame.hidden = false;
+  } else if (id){
+    try {
+      slot.innerHTML = QR.svg(QR.payload(id, amt));
+      frame.hidden = false;
+    } catch (e){
+      slot.innerHTML = '<div style="width:190px;padding:28px 10px;font-size:13px;color:#A23B2C">'
+        + esc(e.message) + '</div>';
+      frame.hidden = false;
+    }
+  } else { frame.hidden = true; }
+
+  if (SUPPORT.promptpay || SUPPORT.qrImage) $('owner-setup').hidden = true;
+}
+
+['pp_id','pp_amt'].forEach(k => $(k).addEventListener('input', renderSupport));
+
+/* ═══════════ 9. การนำทางระหว่างขั้นตอน ═══════════ */
+let step = 1;
+
+/* ═══ ข้อมูลที่ต้องกรอกให้ครบก่อนไปขั้นถัดไป ═══
+   เก็บเป็นตารางเดียว จะได้เพิ่ม/ลดเงื่อนไขทีหลังได้โดยไม่ต้องไล่แก้หลายที่ */
+const REQUIRED = {
+  1: [
+    {id:'principal',   label:'ยอดหนี้คงเหลือ'},
+    {id:'installment', label:'ค่างวดที่ผ่อนอยู่ต่อเดือน'},
+    {id:'baseRate',    label:'ดอกเบี้ยที่เสียอยู่ตอนนี้'},
+    {id:'baseAfter',   label:'ดอกเบี้ยหลังหมดโปรฯ ของสัญญาเดิม'}
+  ],
+  2: [
+    {id:'r_r1', label:'ดอกเบี้ยปีที่ 1 ของธนาคารใหม่'},
+    {id:'r_r2', label:'ดอกเบี้ยปีที่ 2 ของธนาคารใหม่'},
+    {id:'r_r3', label:'ดอกเบี้ยปีที่ 3 ของธนาคารใหม่'},
+    {id:'r_rf', label:'ดอกเบี้ยปีที่ 4 เป็นต้นไปของธนาคารใหม่'},
+    {id:'x_appraisal', label:'ราคาประเมินของกรมที่ดิน', when:() => $('x_on').checked}
+  ],
+  3: [
+    {id:'t_r1', label:'ดอกเบี้ยปีที่ 1 ที่ธนาคารเดิมเสนอ'},
+    {id:'t_r2', label:'ดอกเบี้ยปีที่ 2 ที่ธนาคารเดิมเสนอ'},
+    {id:'t_r3', label:'ดอกเบี้ยปีที่ 3 ที่ธนาคารเดิมเสนอ'},
+    {id:'t_rf', label:'ดอกเบี้ยปีที่ 4 เป็นต้นไปที่ธนาคารเดิมเสนอ'}
+  ]
+};
+
+function markField(id, msg){
+  const el = $(id), box = el.closest('.f');
+  if (!box) return;
+  box.classList.toggle('invalid', !!msg);
+  let err = box.querySelector('.err');
+  if (msg){
+    if (!err){ err = document.createElement('span'); err.className = 'err'; box.appendChild(err); }
+    err.textContent = msg;
+  } else if (err) err.remove();
+}
+function clearMarks(n){
+  (REQUIRED[n] || []).forEach(f => markField(f.id, ''));
+}
+/* ตรวจทุกขั้นตั้งแต่ 1 ถึง n-1 เพื่อกันการกดข้ามจากแถบขั้นตอนด้านบน */
+function firstMissing(target){
+  for (let n = 1; n < target; n++){
+    clearMarks(n);
+    for (const f of (REQUIRED[n] || [])){
+      if (f.when && !f.when()) continue;
+      if (!(num(f.id) > 0)) return {step:n, ...f};
+    }
+  }
+  return null;
+}
+function requireBefore(target){
+  const miss = firstMissing(target);
+  if (!miss) return false;
+  goRaw(miss.step);
+  markField(miss.id, 'กรุณากรอกช่องนี้ก่อนค่ะ');
+  toast('ยังไม่ได้กรอก “' + miss.label + '”');
+  setTimeout(() => { $(miss.id).focus(); $(miss.id).select(); }, 340);
+  return true;
+}
+/* ล้างกรอบแดงทันทีที่พิมพ์ครบ */
+Object.values(REQUIRED).flat().forEach(f =>
+  $(f.id).addEventListener('input', () => { if (num(f.id) > 0) markField(f.id, ''); }));
+
+function goRaw(n){
+  step = n;
+  [1,2,3,4].forEach(i => $('p' + i).hidden = (i !== n));
+  document.querySelectorAll('.step').forEach(b => {
+    const i = +b.dataset.go;
+    b.setAttribute('aria-current', i === n ? 'true' : 'false');
+    b.classList.toggle('done', i < n);
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function go(n){
+  if (n > step && requireBefore(n)) return;   // เดินหน้าเท่านั้นที่ต้องกรอกครบ ย้อนกลับได้เสมอ
+  if (n >= 2) { syncPlaceholders(); autoFees(); }
+  if (n === 3){ syncRetentionDefaults(); renderTransferRet(); }
+  goRaw(n);
+  if (n === 4) render();
+}
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(+b.dataset.go));
+
+/* ═══════════ 10. ช่วยกรอกและจัดรูปแบบตัวเลข ═══════════ */
+const isRateField = id => /^(r_r|t_r)/.test(id) || id === 'baseRate' || id === 'baseAfter' || id === 'r_rf'
+  || id === 'r_vat' || id === 't_vat' || id === 'x_share' || id === 'x_fee_pct'
+  || id === 'x_tax_pct' || id === 'x_years'
+  || id === 't_rf' || id === 'horizon';
+function reformat(el){
+  const raw = el.value.replace(/[, ]/g, '');
+  if (raw === '' || !isFinite(parseFloat(raw))) return;
+  el.value = isRateField(el.id) ? raw : nf0.format(Math.round(parseFloat(raw)));
+}
+document.querySelectorAll('input[inputmode="decimal"],input[inputmode="numeric"]')
+  .forEach(el => el.addEventListener('blur', () => reformat(el)));
+
+const setVal = (id, v) => { $(id).value = nf0.format(Math.round(v)); };
+
+/* วงเงินที่ใช้คิดค่าธรรมเนียม: ถ้ายังไม่กรอกวงเงินใหม่ ให้ยึดยอดหนี้คงเหลือ */
+const loanBase = () => num('r_loan') || num('principal');
+
+/* ค่าจดจำนองและอากรแสตมป์คิดจากวงเงินเสมอ ผู้ใช้พิมพ์ทับเองได้
+   ถ้าพิมพ์ทับแล้วจะไม่ถูกเขียนทับอีก เว้นแต่กดปุ่มช่วยกรอก */
+let feesTouched = false;
+function autoFees(force){
+  if (feesTouched && !force) return;
+  const loan = loanBase();
+  if (!loan) return;
+  setVal('r_mortgage', Math.min(loan * ($('r_gov').checked ? 0.0001 : 0.01), 200000));
+  setVal('r_stamp', Math.min(loan * 0.0005, 10000));
+}
+['r_mortgage','r_stamp'].forEach(id =>
+  $(id).addEventListener('input', () => { feesTouched = true; }));
+
+/* ช่องที่เว้นว่างได้ ให้บอกในตัวเองว่าถ้าไม่กรอกจะใช้เลขอะไรแทน */
+function syncPlaceholders(){
+  const P = num('principal'), I = num('installment');
+  $('r_loan').placeholder = P ? 'เว้นว่าง = ' + nf0.format(P) : 'เว้นว่าง = เท่ายอดหนี้คงเหลือ';
+  const instTxt = I ? 'เว้นว่าง = ' + nf0.format(I) : 'เว้นว่าง = ค่างวดเดิม';
+  $('r_inst').placeholder = instTxt;
+  $('t_inst').placeholder = instTxt;
+  $('x_price').placeholder = 'เว้นว่าง = ใช้ราคาประเมินส่วนที่โอน';
+}
+
+/* ค่าประกันอัคคีภัยฝั่งขอลดดอกเบี้ย ปกติเท่าเดิมกับที่จ่ายอยู่ จึงลอกมาให้
+   ถ้าผู้ใช้แก้เองแล้วจะไม่ไปยุ่งอีก */
+let fireTouched = false;
+$('t_fire').addEventListener('input', () => { fireTouched = true; });
+function syncRetentionDefaults(){
+  if (!fireTouched) $('t_fire').value = $('b_fire').value;
+}
+
+$('r_loan_same').onclick = () => { setVal('r_loan', num('principal')); autoFees(true); };
+$('r_inst_same').onclick = () => setVal('r_inst', num('installment'));
+$('t_inst_same').onclick = () => setVal('t_inst', num('installment'));
+$('r_penalty_3').onclick = () => setVal('r_penalty', num('principal') * 0.03);
+$('t_fee_1').onclick     = () => setVal('t_fee', num('principal') * 0.01);
+$('r_gov').onchange      = () => autoFees(true);
+$('r_loan').addEventListener('blur', () => autoFees());
+$('principal').addEventListener('blur', () => { autoFees(); syncPlaceholders(); });
+$('installment').addEventListener('blur', syncPlaceholders);
+$('r_mortgage_bank').addEventListener('change', () => autoFees());
+
+/* ═══════════ 11. ปุ่มส่งออก · เลี้ยงกาแฟ · แชร์ ═══════════ */
+const doExcel = () => {
+  try { exportExcel(); } catch (e){ alert('สร้างไฟล์ Excel ไม่สำเร็จ: ' + e.message); }
+};
+
+/* ประกอบรายงานเป็นหน้า HTML เดี่ยว ๆ สำหรับพิมพ์
+   ใช้ style ชุดเดียวกับหน้าหลัก รายงานจึงหน้าตาเหมือนกันเป๊ะ */
+function buildReportHtml(){
+  const css = [...document.querySelectorAll('style')].map(x => x.textContent).join('\n');
+  const box = document.createElement('div');
+  box.innerHTML = $('print-head').outerHTML + $('p4').innerHTML;
+  box.querySelectorAll('.no-print,.exportbar,#warnings').forEach(el => el.remove());
+  box.querySelectorAll('details').forEach(el => el.setAttribute('open', ''));
+  box.querySelector('#print-head').removeAttribute('id');
+  const head = box.firstElementChild;
+  head.style.display = 'block';
+  return '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>รายงานเปรียบเทียบรีไฟแนนซ์</title><style>' + css
+    + '\n.masthead{display:none}#print-foot{display:block;margin-top:16px;padding-top:9px;'
+    + 'border-top:1px solid #BBB;font-size:12px;color:#555;text-align:center}'
+    + '\n.printbar{position:sticky;top:0;z-index:9;display:flex;gap:10px;justify-content:center;'
+    + 'padding:12px;background:var(--ink)}'
+    + '\n@media print{.printbar{display:none}}</style></head><body>'
+    + '<div class="printbar"><button class="btn gold" onclick="window.print()">'
+    + 'บันทึกเป็น PDF</button><button class="btn ghost" style="background:#fff" '
+    + 'onclick="window.close()">ปิด</button></div>'
+    + '<main class="wrap">' + box.innerHTML + '</main></body></html>';
+}
+
+/* บนมือถือและใน iframe ของ Apps Script การสั่ง print() จากหน้าเดิมมักถูกบล็อก
+   จึงเปิดแท็บใหม่ที่หลุดจาก sandbox แล้วสั่งพิมพ์จากตรงนั้นแทน
+   ถ้าแท็บใหม่ถูกบล็อก ค่อยถอยไปใช้ print() ของหน้าเดิม */
+function doPrint(){
+  if (step !== 4) go(4);
+  if (step !== 4) return;
+  let w = null;
+  try { w = window.open('', '_blank'); } catch (e){ w = null; }
+  if (w && w.document){
+    try {
+      w.document.open();
+      w.document.write(buildReportHtml());
+      w.document.close();
+      const fire = () => { try { w.focus(); w.print(); } catch (e){} };
+      if (w.document.readyState === 'complete') setTimeout(fire, 400);
+      else w.onload = () => setTimeout(fire, 400);
+      return;
+    } catch (e){ try { w.close(); } catch (e2){} }
+  }
+  try { window.print(); }
+  catch (e){
+    toast('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ ลองอนุญาตป็อปอัปของเว็บนี้แล้วกดใหม่อีกครั้ง');
+  }
+}
+
+/* กล่องเลี้ยงกาแฟก่อนดาวน์โหลด ปิดได้ทุกทางแล้วไฟล์จะถูกสร้างต่อทันที
+   ตัวเลือก "ไม่ต้องแสดงอีก" อยู่ในตัวแปรของหน้านี้เท่านั้น ปิดแท็บแล้วหาย ไม่บันทึกลงเครื่อง */
+let coffeeSkip = false, pendingExport = null, didExport = false;
+
+function closeCoffee(run){
+  $('coffee').hidden = true;
+  document.body.style.overflow = '';
+  const job = pendingExport; pendingExport = null;
+  if (run && job){ didExport = true; job(); }   // เรียกทันทีในจังหวะเดียวกับการคลิก ไม่ให้ถูกบล็อก
+}
+function askCoffee(kind, job){
+  if (coffeeSkip){ didExport = true; job(); return; }
+  pendingExport = job;
+  $('coffee-msg').textContent = (kind === 'xls' ? 'ไฟล์ Excel ของคุณพร้อมแล้ว '
+                                                : 'รายงาน PDF ของคุณพร้อมแล้ว ')
+    + 'เครื่องมือนี้ฟรี ไม่มีโฆษณา และไม่เก็บข้อมูลของคุณเลยสักอย่าง ถ้ามันช่วยให้ตัดสินใจง่ายขึ้น เลี้ยงกาแฟสักแก้วก็ยินดีมากค่ะ';
+  $('coffee-go').textContent = kind === 'xls' ? 'ปิดแล้วดาวน์โหลด Excel' : 'ปิดแล้วบันทึก PDF';
+  const qrBox = $('coffee-qr'), src = $('qr-slot').innerHTML;
+  if (!$('qr-frame').hidden && src){ qrBox.innerHTML = src; qrBox.hidden = false; }
+  else qrBox.hidden = true;
+  $('coffee').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('coffee-go').focus();
+}
+
+$('btn-xls').onclick = () => askCoffee('xls', doExcel);
+$('btn-pdf').onclick = () => { if (step !== 4) go(4); if (step === 4) askCoffee('pdf', doPrint); };
+$('coffee-go').onclick = () => closeCoffee(true);
+$('coffee-x').onclick  = () => closeCoffee(true);
+$('coffee-never').onclick = () => { coffeeSkip = true; closeCoffee(true); };
+$('coffee').addEventListener('click', e => { if (e.target === $('coffee')) closeCoffee(true); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('coffee').hidden) closeCoffee(true);
+  else if (!$('sharebox').hidden) closeShare();
+});
+
+/* ═══════════ 12. แจ้งเตือนสั้น ๆ ═══════════ */
+let toastTimer = null;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 3600);
+}
+
+/* ═══════════ 13. ชวนแชร์ ═══════════ */
+const shareLink = () => SUPPORT.shareUrl || location.href.split('#')[0];
+let shareShown = false;
+
+function openShare(){
+  if (shareShown || !$('coffee').hidden) return;
+  shareShown = true;
+  $('sharebox').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+function closeShare(){
+  $('sharebox').hidden = true;
+  document.body.style.overflow = '';
+}
+async function doShare(){
+  const data = {title:'เครื่องคำนวณรีไฟแนนซ์บ้าน',
+    text:'ลองคำนวณดูว่ารีไฟแนนซ์หรือขอลดดอกเบี้ยกับธนาคารเดิม อันไหนคุ้มกว่า',
+    url:shareLink()};
+  if (navigator.share){
+    try { await navigator.share(data); return; } catch (e){ if (e.name === 'AbortError') return; }
+  }
+  copyLink();
+}
+async function copyLink(){
+  const url = shareLink();
+  try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว เอาไปวางส่งต่อได้เลยค่ะ'); }
+  catch (e){
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('คัดลอกลิงก์แล้วค่ะ'); }
+    catch (e2){ toast('คัดลอกไม่สำเร็จ ลองคัดลอกจากช่องที่อยู่เว็บด้านบนแทนนะคะ'); }
+    ta.remove();
+  }
+}
+$('btn-share').onclick   = () => { shareShown = false; openShare(); };
+$('share-now').onclick   = doShare;
+$('share-copy').onclick  = copyLink;
+$('share-x').onclick     = closeShare;
+$('share-close').onclick = closeShare;
+$('sharebox').addEventListener('click', e => { if (e.target === $('sharebox')) closeShare(); });
+
+/* เด้งอัตโนมัติครั้งเดียว เมื่อผู้ใช้ดูผลแล้วกำลังจะออกจากหน้า
+   คอมพิวเตอร์: เมาส์พุ่งออกขอบบน · มือถือ: เลื่อนถึงท้ายหน้าผลลัพธ์ */
+document.addEventListener('mouseout', e => {
+  if (step === 4 && !e.relatedTarget && e.clientY <= 0) openShare();
+});
+let scrollTick = false;
+window.addEventListener('scroll', () => {
+  if (scrollTick || step !== 4) return;
+  scrollTick = true;
+  requestAnimationFrame(() => {
+    scrollTick = false;
+    const bottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+    if (bottom < 140 && (didExport || window.scrollY > 600)) openShare();
+  });
+}, {passive:true});
+
+/* ═══════════ 14. รับความเห็นผู้ใช้ ═══════════ */
+$('fb-chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+});
+$('fb-send').onclick = () => {
+  const tags = [...$('fb-chips').querySelectorAll('[aria-pressed="true"]')].map(b => b.textContent);
+  const text = $('fb-text').value.trim();
+  const contact = $('fb-contact').value.trim();
+  if (!text && !tags.length){ $('fb-text').focus(); toast('พิมพ์สิ่งที่อยากบอกสักหน่อยนะคะ'); return; }
+
+  const body = (tags.length ? 'หัวข้อ: ' + tags.join(', ') + '\n\n' : '')
+    + (text || '(ไม่ได้พิมพ์รายละเอียด)')
+    + (contact ? '\n\nติดต่อกลับ: ' + contact : '');
+
+  const done = () => {
+    $('fb-text').value = ''; $('fb-contact').value = '';
+    $('fb-chips').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    $('fb-note').textContent = 'ส่งเรียบร้อย ขอบคุณมากค่ะ';
+  };
+
+  // ถ้ารันบน Google Apps Script จะส่งเข้าชีตให้เลย
+  if (typeof google !== 'undefined' && google.script && google.script.run){
+    $('fb-send').disabled = true;
+    $('fb-note').textContent = 'กำลังส่ง…';
+    google.script.run
+      .withSuccessHandler(() => { $('fb-send').disabled = false; done(); toast('ส่งความเห็นแล้ว ขอบคุณค่ะ'); })
+      .withFailureHandler(() => { $('fb-send').disabled = false; fallbackSend(body); })
+      .saveFeedback({tags:tags.join(', '), message:text, contact:contact});
+    return;
+  }
+  fallbackSend(body);
+
+  function fallbackSend(b){
+    // โฮสต์แบบ static (เช่น GitHub Pages) ส่งตรงเข้า Apps Script ได้
+    // ใช้ mode no-cors กับ content-type text/plain เพื่อไม่ให้เบราว์เซอร์ยิง preflight
+    if (SUPPORT.feedbackUrl){
+      $('fb-send').disabled = true;
+      $('fb-note').textContent = 'กำลังส่ง…';
+      fetch(SUPPORT.feedbackUrl, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({tags:tags.join(', '), message:text, contact:contact})
+      }).then(() => { $('fb-send').disabled = false; done(); toast('ส่งความเห็นแล้ว ขอบคุณค่ะ'); })
+        .catch(() => { $('fb-send').disabled = false; copyOut(b); });
+      return;
+    }
+    if (SUPPORT.feedbackMail){
+      location.href = 'mailto:' + SUPPORT.feedbackMail
+        + '?subject=' + encodeURIComponent('ความเห็นจากเครื่องคำนวณรีไฟแนนซ์')
+        + '&body=' + encodeURIComponent(b);
+      $('fb-note').textContent = 'เปิดโปรแกรมอีเมลให้แล้ว กดส่งได้เลยค่ะ';
+      return;
+    }
+    copyOut(b);
+  }
+
+  function copyOut(b){
+    navigator.clipboard.writeText(b)
+      .then(() => { $('fb-note').textContent = 'คัดลอกข้อความแล้ว เอาไปวางส่งมาทางไหนก็ได้ค่ะ'; done(); })
+      .catch(() => { $('fb-note').textContent = 'คัดลอกข้อความในช่องแล้วส่งมาได้เลยค่ะ'; });
+  }
+};
+
+/* ═══════════ 15. เครดิตผู้พัฒนา ═══════════ */
+const credit = 'พัฒนาโดย ' + SUPPORT.developer;
+$('print-credit').textContent = credit;
+$('site-credit').textContent = credit;
+$('print-foot').textContent = credit
+  + ' · รายงานนี้เป็นการประมาณการเพื่อใช้เปรียบเทียบทางเลือก ไม่ใช่คำแนะนำทางการเงินเฉพาะบุคคล';
+
+/* ═══════════ เริ่มต้น ═══════════ */
+renderSupport();
+go(1);
+</script>
+</body>
+</html>
