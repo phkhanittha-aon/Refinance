@@ -200,7 +200,7 @@ tfoot td,tfoot th{border-top:2px solid var(--ink); font-weight:700; background:#
 .amortnote{padding:2px 18px 12px; font-size:var(--fs-xs); color:var(--ink-mute); line-height:1.6}
 .amortnote b{color:var(--ink)}
 
-/* ── กล่องเลี้ยงกาแฟก่อนดาวน์โหลด ── */
+/* ── กล่องลอย (ใช้กับกล่องชวนแชร์) ── */
 .modal{position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
   padding:18px; background:rgba(14,31,46,.55); backdrop-filter:blur(2px)}
 .modal[hidden]{display:none}
@@ -213,11 +213,6 @@ tfoot td,tfoot th{border-top:2px solid var(--ink); font-weight:700; background:#
 .modal-body{padding:26px 24px 20px; text-align:center}
 .modal-body h3{font-size:var(--fs-lg); margin-bottom:8px}
 .modal-body p{font-size:var(--fs-sm); color:var(--ink-soft); line-height:1.65; margin-bottom:16px}
-.modal-qr{width:190px; margin:0 auto 12px; background:#fff; padding:10px;
-  border:1px solid var(--line); border-radius:12px}
-.modal-qr svg,.modal-qr img{width:100%; height:auto; display:block}
-.modal-hint{font-size:var(--fs-xs); color:var(--ink-mute); line-height:1.6; margin:0 0 16px;
-  background:#FAF7EF; border:1px solid var(--line); border-radius:9px; padding:9px 11px; text-align:left}
 .modal-foot{display:flex; flex-direction:column; gap:9px}
 .modal-foot .skip{font-size:var(--fs-xs); color:var(--ink-mute); background:none; border:0;
   cursor:pointer; text-decoration:underline; padding:4px}
@@ -252,16 +247,6 @@ tfoot td,tfoot th{border-top:2px solid var(--ink); font-weight:700; background:#
   padding:9px 16px; border-radius:99px; font-size:var(--fs-sm)}
 .share-icons button:hover{border-color:var(--brass); color:var(--brass)}
 
-/* ============ สนับสนุน ============ */
-.support{background:var(--surface); border:1px solid var(--line); border-top:4px solid var(--brass);
-  border-radius:var(--radius); padding:26px; margin:30px 0 40px}
-.support h2{font-size:var(--fs-lg)}
-.support p{color:var(--ink-mute); font-size:var(--fs-sm); margin:8px 0 0; max-width:52ch}
-.support-body{display:flex; gap:26px; flex-wrap:wrap; align-items:flex-start; margin-top:20px}
-.qr-frame{background:#fff; border:1px solid var(--line); border-radius:var(--radius);
-  padding:14px; text-align:center; flex:0 0 auto; margin:0}
-.qr-frame svg,.qr-frame img{width:190px; height:190px; display:block}
-.support-side{flex:1; min-width:245px}
 footer.site{border-top:1px solid var(--line); padding:22px 0 46px; color:var(--ink-mute);
   font-size:var(--fs-xs); line-height:1.7}
 
@@ -276,7 +261,6 @@ footer.site{border-top:1px solid var(--line); padding:22px 0 46px; color:var(--i
   .row-item > :nth-child(2){grid-area:a}
   .row-item > :nth-child(3){grid-area:t}
   .row-item > :nth-child(4){grid-area:d}
-  .qr-frame{margin:0 auto}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important; animation:none !important}}
 
@@ -284,7 +268,7 @@ footer.site{border-top:1px solid var(--line); padding:22px 0 46px; color:var(--i
 @media print{
   @page{size:A4 portrait; margin:13mm 12mm}
   html,body{background:#fff !important; color:#000; font-size:10.5pt}
-  .masthead,.steps,.nav,.exportbar,.no-print,.support,footer.site,.addbtn,.modal,.amortbar{display:none !important}
+  .masthead,.steps,.nav,.exportbar,.no-print,.feedback,footer.site,.addbtn,.modal,.amortbar{display:none !important}
   thead th.bk{-webkit-print-color-adjust:exact; print-color-adjust:exact}
   thead th.bsub{-webkit-print-color-adjust:exact; print-color-adjust:exact}
   .wrap{max-width:none; padding:0}
@@ -758,52 +742,6 @@ footer.site{border-top:1px solid var(--line); padding:22px 0 46px; color:var(--i
     </div>
   </section>
 
-  <!-- ==================== สนับสนุน ==================== -->
-  <section class="support no-print">
-    <h2>เลี้ยงกาแฟคนทำ</h2>
-    <p>ถ้าเครื่องมือนี้ช่วยให้คุณตัดสินใจได้ง่ายขึ้นหรือประหยัดเงินได้จริง จะสมทบทุนค่ากาแฟสักแก้วก็ยินดีมากค่ะ แอปนี้ไม่มีโฆษณาและไม่เก็บข้อมูลใด ๆ</p>
-    <div class="support-body">
-      <figure class="qr-frame" id="qr-frame" hidden>
-        <div id="qr-slot"></div>
-      </figure>
-      <div class="support-side">
-        <details id="owner-setup">
-          <summary style="padding:11px 14px; font-size:14px">ตั้งค่าบัญชีรับเงิน (สำหรับเจ้าของแอป)</summary>
-          <div style="padding:14px">
-            <div class="grid">
-              <div class="f">
-                <label for="pp_id">เลขพร้อมเพย์</label>
-                <input type="text" id="pp_id" placeholder="0812345678" inputmode="numeric">
-                <span class="hint">เบอร์มือถือ 10 หลัก, เลขบัตรประชาชน 13 หลัก หรือ e-Wallet 15 หลัก</span>
-              </div>
-              <div class="f">
-                <label for="pp_amt">ระบุจำนวนเงินล่วงหน้า</label>
-                <div class="ctl"><input type="text" id="pp_amt" inputmode="decimal" placeholder="เว้นว่าง = ผู้โอนกรอกเอง"><span class="suffix">บาท</span></div>
-              </div>
-            </div>
-            <p class="hint" style="margin-top:12px">ช่องนี้ใช้ดูตัวอย่างชั่วคราวเท่านั้น ไม่มีการบันทึกไว้ เมื่อได้ QR ที่ถูกต้องแล้ว ให้ใส่ค่าลงในตัวแปร <code>SUPPORT</code> ที่ต้นสคริปต์ของไฟล์นี้ เพื่อให้แสดงถาวรกับผู้ใช้ทุกคน</p>
-          </div>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==================== กล่องเลี้ยงกาแฟก่อนดาวน์โหลด ==================== -->
-  <div class="modal no-print" id="coffee" hidden role="dialog" aria-modal="true" aria-labelledby="coffee-h">
-    <div class="modal-card">
-      <button class="x" id="coffee-x" aria-label="ปิด">&times;</button>
-      <div class="modal-body">
-        <h3 id="coffee-h">ขอเวลา 5 วินาทีค่ะ ☕</h3>
-        <p id="coffee-msg">ไฟล์ของคุณพร้อมแล้ว เครื่องมือนี้ฟรี ไม่มีโฆษณา และไม่เก็บข้อมูลใด ๆ ถ้ามันช่วยให้ตัดสินใจง่ายขึ้น เลี้ยงกาแฟสักแก้วก็ยินดีมากค่ะ</p>
-        <div class="modal-qr" id="coffee-qr" hidden></div>
-        <div class="modal-foot">
-          <button class="btn gold" id="coffee-go">ปิดแล้วดาวน์โหลดต่อ</button>
-          <button class="skip" id="coffee-never">ไม่ต้องแสดงอีกในการใช้งานครั้งนี้</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ==================== ชวนแชร์ ==================== -->
   <div class="modal no-print" id="sharebox" hidden role="dialog" aria-modal="true" aria-labelledby="share-h">
     <div class="modal-card">
@@ -833,16 +771,13 @@ footer.site{border-top:1px solid var(--line); padding:22px 0 46px; color:var(--i
 <script>
 "use strict";
 /* ═══════════════════════════════════════════════════════════════
-   ตั้งค่าบัญชีรับเงินของเจ้าของแอป — แก้เฉพาะบล็อกนี้บล็อกเดียว
+   ตั้งค่าของเจ้าของแอป — แก้เฉพาะบล็อกนี้บล็อกเดียว
    ═══════════════════════════════════════════════════════════════ */
 const SUPPORT = {
-  promptpay : '004999011597399',        // เลขพร้อมเพย์ (มือถือ 10 / บัตรประชาชน 13 / e-Wallet 15 หลัก)
-  amount    : '',                       // ระบุยอดล่วงหน้า เช่น 50 — เว้นว่างให้ผู้โอนกรอกเอง
-  qrImage   : '',                       // หรือใช้รูป QR ของคุณเอง: 'data:image/png;base64,....'
-  developer : 'Khanittha Phoothong',    // ชื่อผู้พัฒนา แสดงในรายงาน PDF และท้ายหน้า
+  developer    : 'Khanittha Phoothong', // ชื่อผู้พัฒนา แสดงในรายงาน PDF และท้ายหน้า
   feedbackMail : '',                    // อีเมลรับ feedback — เว้นว่างได้ ระบบจะใช้วิธีคัดลอกข้อความแทน
   feedbackUrl  : '',                    // URL /exec ของ Apps Script — ใช้ตอนโฮสต์บน GitHub Pages
-  shareUrl  : ''                        // ลิงก์ที่ใช้ตอนกดแชร์ — เว้นว่าง = ใช้ URL ของหน้านี้
+  shareUrl     : ''                     // ลิงก์ที่ใช้ตอนกดแชร์ — เว้นว่าง = ใช้ URL ของหน้านี้
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1688,211 +1623,6 @@ function exportExcel(){
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
-/* ═══════════ 8. QR พร้อมเพย์ — สร้างในเครื่อง ไม่เรียกเซิร์ฟเวอร์ใด ๆ ═══════════ */
-const QR = (() => {
-  const crc16 = s => { let c = 0xFFFF;
-    for (let i = 0; i < s.length; i++){ c ^= s.charCodeAt(i) << 8;
-      for (let j = 0; j < 8; j++) c = (c & 0x8000) ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
-    return c.toString(16).toUpperCase().padStart(4, '0'); };
-  const tlv = (id, v) => id + String(v.length).padStart(2, '0') + v;
-
-  function payload(target, amount){
-    const d = String(target).replace(/\D/g, '');
-    let acc;
-    if (d.length === 13) acc = tlv('02', d);
-    else if (d.length === 15) acc = tlv('03', d);
-    else if (d.length === 10 || d.length === 9) acc = tlv('01', ('0066' + d.replace(/^0/, '')).padStart(13, '0'));
-    else throw new Error('เลขพร้อมเพย์ต้องเป็นเบอร์มือถือ 10 หลัก เลขบัตรประชาชน 13 หลัก หรือ e-Wallet 15 หลัก');
-    const has = amount && Number(amount) > 0;
-    const p = tlv('00', '01') + tlv('01', has ? '12' : '11')
-      + tlv('29', tlv('00', 'A000000677010111') + acc) + tlv('53', '764')
-      + (has ? tlv('54', Number(amount).toFixed(2)) : '') + tlv('58', 'TH') + '6304';
-    return p + crc16(p);
-  }
-
-  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
-  (function(){ let x = 1;
-    for (let i = 0; i < 255; i++){ EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11D; }
-    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255]; })();
-  const gmul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
-  const gen = n => { let p = [1];
-    for (let i = 0; i < n; i++){ const q = [...p, 0];
-      for (let j = 0; j < p.length; j++) q[j + 1] ^= gmul(p[j], EXP[i]); p = q; }
-    return p; };
-  const rsEnc = (data, n) => { const g = gen(n), res = new Array(n).fill(0);
-    for (const d of data){ const f = d ^ res[0]; res.shift(); res.push(0);
-      if (f !== 0) for (let i = 0; i < n; i++) res[i] ^= gmul(g[i + 1], f); }
-    return res; };
-
-  const RS = {1:{L:[7,[[1,19]]],M:[10,[[1,16]]]}, 2:{L:[10,[[1,34]]],M:[16,[[1,28]]]},
-    3:{L:[15,[[1,55]]],M:[26,[[1,44]]]}, 4:{L:[20,[[1,80]]],M:[18,[[2,32]]]},
-    5:{L:[26,[[1,108]]],M:[24,[[2,43]]]}, 6:{L:[18,[[2,68]]],M:[16,[[4,27]]]},
-    7:{L:[20,[[2,78]]],M:[18,[[4,31]]]}, 8:{L:[24,[[2,97]]],M:[22,[[2,38],[2,39]]]},
-    9:{L:[30,[[2,116]]],M:[22,[[3,36],[2,37]]]}, 10:{L:[18,[[2,68],[2,69]]],M:[26,[[4,43],[1,44]]]}};
-  const ALIGN = {1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],10:[6,28,50]};
-  const AN = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
-
-  function encode(text, ecl){
-    ecl = ecl || 'M';
-    const isAN = [...text].every(ch => AN.indexOf(ch) >= 0);
-    const bytes = isAN ? null : Array.from(new TextEncoder().encode(text));
-    const len = isAN ? text.length : bytes.length;
-    const bitLen = v => 4 + (isAN ? (v < 10 ? 9 : 11) : (v < 10 ? 8 : 16))
-      + (isAN ? Math.floor(len / 2) * 11 + (len % 2) * 6 : len * 8);
-    let ver = 0, cap = 0;
-    for (let v = 1; v <= 10; v++){
-      const total = RS[v][ecl][1].reduce((s, [b, d]) => s + b * d, 0);
-      if (bitLen(v) <= total * 8){ ver = v; cap = total; break; }
-    }
-    if (!ver) throw new Error('ข้อมูลยาวเกินความจุ QR');
-    const [ecPer, groups] = RS[ver][ecl], bits = [];
-    const push = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >> i) & 1); };
-    if (isAN){
-      push(2, 4); push(len, ver < 10 ? 9 : 11);
-      for (let i = 0; i + 1 < len; i += 2) push(AN.indexOf(text[i]) * 45 + AN.indexOf(text[i + 1]), 11);
-      if (len % 2) push(AN.indexOf(text[len - 1]), 6);
-    } else { push(4, 4); push(len, ver < 10 ? 8 : 16); for (const b of bytes) push(b, 8); }
-    for (let i = 0; i < 4 && bits.length < cap * 8; i++) bits.push(0);
-    while (bits.length % 8) bits.push(0);
-    const dc = [];
-    for (let i = 0; i < bits.length; i += 8){ let v = 0;
-      for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j]; dc.push(v); }
-    const pads = [0xEC, 0x11]; let pi = 0;
-    while (dc.length < cap) dc.push(pads[pi++ % 2]);
-    const blocks = []; let off = 0;
-    for (const [n, d] of groups) for (let i = 0; i < n; i++){
-      const b = dc.slice(off, off + d); off += d; blocks.push({d:b, e:rsEnc(b, ecPer)}); }
-    const maxD = Math.max(...blocks.map(b => b.d.length)), fin = [];
-    for (let i = 0; i < maxD; i++) for (const b of blocks) if (i < b.d.length) fin.push(b.d[i]);
-    for (let i = 0; i < ecPer; i++) for (const b of blocks) fin.push(b.e[i]);
-    return matrix(fin, ver, ecl);
-  }
-
-  const maskFn = (k, r, c) => { switch (k){
-    case 0: return (r + c) % 2 === 0;  case 1: return r % 2 === 0;  case 2: return c % 3 === 0;
-    case 3: return (r + c) % 3 === 0;  case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
-    case 5: return (r * c) % 2 + (r * c) % 3 === 0;
-    case 6: return ((r * c) % 2 + (r * c) % 3) % 2 === 0;
-    default: return ((r + c) % 2 + (r * c) % 3) % 2 === 0; } };
-
-  function penalty(g){
-    const n = g.length; let s = 0;
-    for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++)
-      if (g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) s += 3;
-    const run = get => { for (let r = 0; r < n; r++){ let k = 1;
-      for (let c = 1; c < n; c++){ if (get(r, c) === get(r, c - 1)) k++; else { if (k >= 5) s += 3 + (k - 5); k = 1; } }
-      if (k >= 5) s += 3 + (k - 5); } };
-    run((r, c) => g[r][c]); run((r, c) => g[c][r]);
-    const pat = [true,false,true,true,true,false,true,false,false,false,false];
-    const chk = a => { for (let i = 0; i + 11 <= a.length; i++){ let o1 = true, o2 = true;
-      for (let j = 0; j < 11; j++){ if (a[i + j] !== pat[j]) o1 = false; if (a[i + j] !== pat[10 - j]) o2 = false; }
-      if (o1) s += 40; if (o2) s += 40; } };
-    for (let r = 0; r < n; r++){ chk(g[r]); chk(g.map(x => x[r])); }
-    let dark = 0;
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (g[r][c]) dark++;
-    return s + Math.floor(Math.abs(dark * 100 / (n * n) - 50) / 5) * 10;
-  }
-
-  function matrix(cw, ver, ecl){
-    const size = ver * 4 + 17, m = Array.from({length:size}, () => new Array(size).fill(null));
-    const set = (r, c, v) => { if (r >= 0 && c >= 0 && r < size && c < size) m[r][c] = v; };
-    for (const [fr, fc] of [[0,0], [0,size-7], [size-7,0]])
-      for (let r = -1; r < 8; r++) for (let c = -1; c < 8; c++){
-        const inb = r >= 0 && r < 7 && c >= 0 && c < 7;
-        set(fr + r, fc + c, inb && (r === 0 || r === 6 || c === 0 || c === 6
-          || (r >= 2 && r <= 4 && c >= 2 && c <= 4)));
-      }
-    for (let i = 8; i < size - 8; i++){ set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
-    for (const r of ALIGN[ver]) for (const c of ALIGN[ver]){
-      if ((r < 8 && c < 8) || (r < 8 && c > size - 9) || (r > size - 9 && c < 8)) continue;
-      for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++)
-        set(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
-    }
-    for (let i = 0; i < 9; i++){ if (m[8][i] === null) set(8, i, false); if (m[i][8] === null) set(i, 8, false); }
-    for (let i = 0; i < 8; i++){
-      if (m[8][size-1-i] === null) set(8, size-1-i, false);
-      if (m[size-1-i][8] === null) set(size-1-i, 8, false); }
-    set(size - 8, 8, true);
-    if (ver >= 7){
-      let rem = ver << 12;
-      for (let i = 0; i < 6; i++) if (rem & (1 << (17 - i))) rem ^= 0x1F25 << (5 - i);
-      const bv = (ver << 12) | (rem & 0xFFF);
-      for (let i = 0; i < 18; i++){ const b = ((bv >> i) & 1) === 1;
-        set(Math.floor(i / 3), size - 11 + (i % 3), b);
-        set(size - 11 + (i % 3), Math.floor(i / 3), b); }
-    }
-    let best = null;
-    for (let mask = 0; mask < 8; mask++){
-      const g = m.map(r => r.slice());
-      let idx = 0, up = true;
-      for (let col = size - 1; col > 0; col -= 2){
-        if (col === 6) col--;
-        for (let i = 0; i < size; i++){
-          const row = up ? size - 1 - i : i;
-          for (let k = 0; k < 2; k++){
-            const c = col - k;
-            if (g[row][c] !== null) continue;
-            let bit = false;
-            if (idx < cw.length * 8){ bit = ((cw[idx >> 3] >> (7 - (idx & 7))) & 1) === 1; idx++; }
-            if (maskFn(mask, row, c)) bit = !bit;
-            g[row][c] = bit;
-          }
-        }
-        up = !up;
-      }
-      const fmt = ((ecl === 'L' ? 1 : 0) << 3) | mask; let rr = fmt << 10;
-      for (let i = 0; i < 5; i++) if (rr & (1 << (14 - i))) rr ^= 0x537 << (4 - i);
-      const fb = ((fmt << 10) | rr) ^ 0x5412;
-      for (let i = 0; i < 15; i++){
-        const b = ((fb >> (14 - i)) & 1) === 1;
-        if (i < 6) g[8][i] = b; else if (i < 8) g[8][i + 1] = b;
-        else if (i === 8) g[7][8] = b; else g[14 - i][8] = b;
-        if (i < 8) g[size - 1 - i][8] = b; else g[8][size - 15 + i] = b;
-      }
-      g[size - 8][8] = true;
-      const p = penalty(g);
-      if (!best || p < best.p) best = {p, g};
-    }
-    return best.g.map(r => r.map(v => !!v));
-  }
-
-  function svg(text){
-    const m = encode(text, 'M'), n = m.length, q = 3, T = n + q * 2;
-    let d = '';
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
-      if (m[r][c]) d += 'M' + (c + q) + ' ' + (r + q) + 'h1v1h-1z';
-    return '<svg viewBox="0 0 ' + T + ' ' + T + '" xmlns="http://www.w3.org/2000/svg" '
-      + 'shape-rendering="crispEdges" role="img" aria-label="คิวอาร์โค้ดพร้อมเพย์">'
-      + '<rect width="' + T + '" height="' + T + '" fill="#fff"/>'
-      + '<path d="' + d + '" fill="#0E1F2E"/></svg>';
-  }
-  return {payload, svg};
-})();
-
-function renderSupport(){
-  const id   = (SUPPORT.promptpay || $('pp_id').value || '').trim();
-  const amt  = String(SUPPORT.amount || $('pp_amt').value || '').replace(/[, ]/g, '').trim();
-  const slot = $('qr-slot'), frame = $('qr-frame');
-
-  if (SUPPORT.qrImage){
-    slot.innerHTML = '<img src="' + esc(SUPPORT.qrImage) + '" alt="คิวอาร์โค้ดสำหรับสนับสนุน">';
-    frame.hidden = false;
-  } else if (id){
-    try {
-      slot.innerHTML = QR.svg(QR.payload(id, amt));
-      frame.hidden = false;
-    } catch (e){
-      slot.innerHTML = '<div style="width:190px;padding:28px 10px;font-size:13px;color:#A23B2C">'
-        + esc(e.message) + '</div>';
-      frame.hidden = false;
-    }
-  } else { frame.hidden = true; }
-
-  if (SUPPORT.promptpay || SUPPORT.qrImage) $('owner-setup').hidden = true;
-}
-
-['pp_id','pp_amt'].forEach(k => $(k).addEventListener('input', renderSupport));
-
 /* ═══════════ 9. การนำทางระหว่างขั้นตอน ═══════════ */
 let step = 1;
 
@@ -2037,7 +1767,7 @@ $('principal').addEventListener('blur', () => { autoFees(); syncPlaceholders(); 
 $('installment').addEventListener('blur', syncPlaceholders);
 $('r_mortgage_bank').addEventListener('change', () => autoFees());
 
-/* ═══════════ 11. ปุ่มส่งออก · เลี้ยงกาแฟ · แชร์ ═══════════ */
+/* ═══════════ 11. ปุ่มส่งออก ═══════════ */
 const doExcel = () => {
   try { exportExcel(); } catch (e){ alert('สร้างไฟล์ Excel ไม่สำเร็จ: ' + e.message); }
 };
@@ -2092,41 +1822,13 @@ function doPrint(){
   }
 }
 
-/* กล่องเลี้ยงกาแฟก่อนดาวน์โหลด ปิดได้ทุกทางแล้วไฟล์จะถูกสร้างต่อทันที
-   ตัวเลือก "ไม่ต้องแสดงอีก" อยู่ในตัวแปรของหน้านี้เท่านั้น ปิดแท็บแล้วหาย ไม่บันทึกลงเครื่อง */
-let coffeeSkip = false, pendingExport = null, didExport = false;
+/* ใช้บอกว่าเคยดาวน์โหลดไปแล้ว เพื่อจังหวะเด้งกล่องชวนแชร์ */
+let didExport = false;
 
-function closeCoffee(run){
-  $('coffee').hidden = true;
-  document.body.style.overflow = '';
-  const job = pendingExport; pendingExport = null;
-  if (run && job){ didExport = true; job(); }   // เรียกทันทีในจังหวะเดียวกับการคลิก ไม่ให้ถูกบล็อก
-}
-function askCoffee(kind, job){
-  if (coffeeSkip){ didExport = true; job(); return; }
-  pendingExport = job;
-  $('coffee-msg').textContent = (kind === 'xls' ? 'ไฟล์ Excel ของคุณพร้อมแล้ว '
-                                                : 'รายงาน PDF ของคุณพร้อมแล้ว ')
-    + 'เครื่องมือนี้ฟรี ไม่มีโฆษณา และไม่เก็บข้อมูลของคุณเลยสักอย่าง ถ้ามันช่วยให้ตัดสินใจง่ายขึ้น เลี้ยงกาแฟสักแก้วก็ยินดีมากค่ะ';
-  $('coffee-go').textContent = kind === 'xls' ? 'ปิดแล้วดาวน์โหลด Excel' : 'ปิดแล้วบันทึก PDF';
-  const qrBox = $('coffee-qr'), src = $('qr-slot').innerHTML;
-  if (!$('qr-frame').hidden && src){ qrBox.innerHTML = src; qrBox.hidden = false; }
-  else qrBox.hidden = true;
-  $('coffee').hidden = false;
-  document.body.style.overflow = 'hidden';
-  $('coffee-go').focus();
-}
-
-$('btn-xls').onclick = () => askCoffee('xls', doExcel);
-$('btn-pdf').onclick = () => { if (step !== 4) go(4); if (step === 4) askCoffee('pdf', doPrint); };
-$('coffee-go').onclick = () => closeCoffee(true);
-$('coffee-x').onclick  = () => closeCoffee(true);
-$('coffee-never').onclick = () => { coffeeSkip = true; closeCoffee(true); };
-$('coffee').addEventListener('click', e => { if (e.target === $('coffee')) closeCoffee(true); });
+$('btn-xls').onclick = () => { didExport = true; doExcel(); };
+$('btn-pdf').onclick = () => { didExport = true; doPrint(); };
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  if (!$('coffee').hidden) closeCoffee(true);
-  else if (!$('sharebox').hidden) closeShare();
+  if (e.key === 'Escape' && !$('sharebox').hidden) closeShare();
 });
 
 /* ═══════════ 12. แจ้งเตือนสั้น ๆ ═══════════ */
@@ -2143,7 +1845,7 @@ const shareLink = () => SUPPORT.shareUrl || location.href.split('#')[0];
 let shareShown = false;
 
 function openShare(){
-  if (shareShown || !$('coffee').hidden) return;
+  if (shareShown) return;
   shareShown = true;
   $('sharebox').hidden = false;
   document.body.style.overflow = 'hidden';
@@ -2268,7 +1970,6 @@ $('print-foot').textContent = credit
   + ' · รายงานนี้เป็นการประมาณการเพื่อใช้เปรียบเทียบทางเลือก ไม่ใช่คำแนะนำทางการเงินเฉพาะบุคคล';
 
 /* ═══════════ เริ่มต้น ═══════════ */
-renderSupport();
 go(1);
 </script>
 </body>
